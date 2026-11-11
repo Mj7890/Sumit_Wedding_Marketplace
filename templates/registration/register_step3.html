@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% block title %}Complete Registration — Arts By Graphic{% endblock %}
+{% block extra_css %}
+<style>
+.auth-page{min-height:85vh;display:flex;align-items:center;justify-content:center;padding:4rem 1rem;
+  background:radial-gradient(ellipse 70% 60% at 50% 40%,#f0e4d4,var(--cream));}
+.auth-card{background:white;padding:3rem;border-radius:8px;box-shadow:0 20px 60px var(--shadow);width:100%;max-width:440px;}
+.auth-step-bar{display:flex;gap:0;margin-bottom:2rem;border-radius:20px;overflow:hidden;background:var(--ivory);}
+.auth-step{flex:1;padding:0.5rem;text-align:center;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;opacity:0.4;}
+.auth-step.done{background:var(--gold);color:white;opacity:1;}
+.auth-step.active{background:var(--deep);color:white;opacity:1;}
+.auth-title{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:300;margin-bottom:0.3rem;color:var(--deep);}
+.verified-badge{display:inline-flex;align-items:center;gap:0.4rem;background:#d4edda;color:#155724;
+  padding:0.35rem 0.9rem;border-radius:20px;font-size:0.78rem;margin-bottom:1.5rem;}
+
+/* field error highlight */
+.field-err-box{background:#fdf0f0;border:1px solid #f5c6cb;border-radius:6px;
+  padding:0.6rem 0.9rem;margin-bottom:0.8rem;font-size:0.8rem;color:#c0392b;}
+.field-err-box ul{margin:0;padding-left:1.2rem;}
+
+/* Password wrappers */
+.pw-wrap{position:relative;margin-bottom:0;}
+.pw-wrap input{padding-right:2.8rem !important;}
+.pw-toggle{position:absolute;right:0.9rem;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;font-size:1rem;opacity:0.45;padding:0;transition:opacity 0.2s;}
+.pw-toggle:hover{opacity:0.9;}
+
+/* Strength bar */
+.strength-bar{height:5px;border-radius:3px;background:#eee;overflow:hidden;margin-top:0.5rem;}
+.strength-fill{height:100%;border-radius:3px;width:0%;transition:width 0.4s ease,background 0.4s ease;}
+.strength-row{display:flex;justify-content:space-between;margin-top:0.3rem;}
+.strength-text{font-size:0.7rem;font-weight:600;}
+.strength-rules{display:flex;flex-wrap:wrap;gap:0.35rem;margin-top:0.4rem;margin-bottom:0.5rem;}
+.rule{font-size:0.62rem;padding:0.18rem 0.5rem;border-radius:20px;background:#f0f0f0;color:#aaa;transition:all 0.3s;}
+.rule.pass{background:#d4edda;color:#155724;}
+.match-ok{color:#22c55e;font-size:0.7rem;font-weight:600;margin-top:0.3rem;display:block;}
+.match-no{color:#ef4444;font-size:0.7rem;font-weight:600;margin-top:0.3rem;display:block;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+
+    <div class="auth-step-bar">
+      <div class="auth-step done">✓ Email</div>
+      <div class="auth-step done">✓ Verified</div>
+      <div class="auth-step active">3. Set Password</div>
+    </div>
+
+    <p class="eyebrow">✦ Almost Done</p>
+    <h1 class="auth-title">Set your password</h1>
+    <div class="verified-badge">✅ {{ email }} — verified</div>
+
+    {# Show all form errors at the top so user knows what to fix #}
+    {% if form.errors %}
+    <div class="field-err-box">
+      <strong>Please fix the following:</strong>
+      <ul>
+        {% for field in form %}
+          {% for error in field.errors %}
+            <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+          {% endfor %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <form method="post" id="regForm">
+      {% csrf_token %}
+
+      {# Username #}
+      <label class="form-label">Username</label>
+      {{ form.username }}
+      {% for e in form.username.errors %}
+      <p class="form-error">{{ e }}</p>
+      {% endfor %}
+
+      {# Password 1 #}
+      <label class="form-label" style="margin-top:0.8rem;">Password</label>
+      <div class="pw-wrap">
+        {{ form.password1 }}
+        <button type="button" class="pw-toggle" onclick="togglePw('id_password1',this)">👁</button>
+      </div>
+      <div class="strength-bar"><div class="strength-fill" id="sBar"></div></div>
+      <div class="strength-row">
+        <span class="strength-text" id="sText"></span>
+        <span style="font-size:0.65rem;color:#bbb;" id="sScore"></span>
+      </div>
+      <div class="strength-rules">
+        <span class="rule" id="r-len">8+ chars</span>
+        <span class="rule" id="r-upper">Uppercase</span>
+        <span class="rule" id="r-lower">Lowercase</span>
+        <span class="rule" id="r-num">Number</span>
+        <span class="rule" id="r-sym">Symbol</span>
+      </div>
+      {% for e in form.password1.errors %}
+      <p class="form-error">{{ e }}</p>
+      {% endfor %}
+
+      {# Password 2 #}
+      <label class="form-label">Confirm Password</label>
+      <div class="pw-wrap">
+        {{ form.password2 }}
+        <button type="button" class="pw-toggle" onclick="togglePw('id_password2',this)">👁</button>
+      </div>
+      <span id="matchText"></span>
+      {% for e in form.password2.errors %}
+      <p class="form-error">{{ e }}</p>
+      {% endfor %}
+
+      <button type="submit" class="btn btn-dark" style="width:100%;margin-top:1.2rem;padding:1rem;">
+        🎉 Create My Account
+      </button>
+    </form>
+
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const pw1 = document.getElementById('id_password1');
+  const pw2 = document.getElementById('id_password2');
+  if (pw1) pw1.addEventListener('input', () => checkStrength(pw1.value));
+  if (pw2) pw2.addEventListener('input', checkMatch);
+});
+
+function togglePw(id, btn) {
+  const i = document.getElementById(id);
+  if (!i) return;
+  i.type = i.type === 'password' ? 'text' : 'password';
+  btn.textContent = i.type === 'password' ? '👁' : '🙈';
+}
+
+function checkStrength(pw) {
+  const rules = {
+    'r-len':   pw.length >= 8,
+    'r-upper': /[A-Z]/.test(pw),
+    'r-lower': /[a-z]/.test(pw),
+    'r-num':   /[0-9]/.test(pw),
+    'r-sym':   /[^A-Za-z0-9]/.test(pw),
+  };
+  Object.entries(rules).forEach(([id, pass]) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('pass', pass);
+  });
+  const score = Object.values(rules).filter(Boolean).length;
+  const scr   = document.getElementById('sScore');
+  if (scr) scr.textContent = pw.length ? score + '/5' : '';
+
+  const levels = [
+    { label:'',              color:'#eee',    w:'0%'   },
+    { label:'Very Weak',     color:'#ef4444', w:'15%'  },
+    { label:'Weak',          color:'#f97316', w:'35%'  },
+    { label:'Fair',          color:'#eab308', w:'55%'  },
+    { label:'Strong',        color:'#22c55e', w:'80%'  },
+    { label:'Very Strong 💪',color:'#16a34a', w:'100%' },
+  ];
+  const lvl = levels[score];
+  const bar = document.getElementById('sBar');
+  const txt = document.getElementById('sText');
+  if (bar) { bar.style.width = pw.length ? lvl.w : '0%'; bar.style.background = lvl.color; }
+  if (txt) { txt.style.color = lvl.color; txt.textContent = pw.length ? lvl.label : ''; }
+  checkMatch();
+}
+
+function checkMatch() {
+  const p1 = document.getElementById('id_password1');
+  const p2 = document.getElementById('id_password2');
+  const el = document.getElementById('matchText');
+  if (!p1 || !p2 || !el || !p2.value) { if (el) el.textContent = ''; return; }
+  if (p1.value === p2.value) {
+    el.className = 'match-ok'; el.textContent = '✓ Passwords match';
+  } else {
+    el.className = 'match-no'; el.textContent = '✗ Passwords do not match';
+  }
+}
+</script>
+{% endblock %}

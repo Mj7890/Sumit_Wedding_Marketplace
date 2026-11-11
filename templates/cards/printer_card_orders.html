@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% block title %}मेरे प्रिन्ट ऑर्डर — धंनजय प्रिन्टर्स{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@400;600;700&family=Noto+Sans+Devanagari:wght@300;400;500;600&display=swap');
+
+.print-orders-page {
+  min-height: 90vh;
+  background: linear-gradient(135deg, #1a0808 0%, #3d1010 40%, #1a0808 100%);
+  padding: 4rem 1rem;
+  position: relative;
+}
+.print-orders-page::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cpath d='M30 5 L35 20 L50 20 L38 30 L43 45 L30 35 L17 45 L22 30 L10 20 L25 20Z' fill='none' stroke='%23c8962e' stroke-width='0.3' opacity='0.12'/%3E%3C/svg%3E") repeat;
+}
+.print-orders-wrap { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; }
+
+/* Page header */
+.page-header { margin-bottom: 2rem; animation: fadeDown 0.5s ease both; }
+.back-link {
+  font-family: 'Noto Sans Devanagari', sans-serif;
+  font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase;
+  color: #c8962e; text-decoration: none; opacity: 0.8; transition: opacity 0.2s;
+}
+.back-link:hover { opacity: 1; }
+.page-title {
+  font-family: 'Noto Serif Devanagari', serif;
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  font-weight: 700; color: #f0d080;
+  margin-top: 0.6rem; line-height: 1.2;
+}
+.page-sub { font-family: 'Noto Sans Devanagari', sans-serif; font-size: 0.85rem; color: rgba(255,255,255,0.45); margin-top: 0.3rem; }
+
+/* Order cards */
+.order-card {
+  background: rgba(255,253,247,0.96);
+  border-radius: 3px;
+  margin-bottom: 1.2rem;
+  overflow: hidden;
+  box-shadow: 0 4px 25px rgba(0,0,0,0.4);
+  transition: all 0.3s cubic-bezier(0.23,1,0.32,1);
+  animation: riseUp 0.4s ease both;
+  text-decoration: none; color: inherit; display: block;
+}
+.order-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
+
+.order-card-stripe {
+  height: 4px;
+}
+.stripe-bride { background: linear-gradient(90deg, #c0507a, #f8a0b8, #c0507a); }
+.stripe-groom { background: linear-gradient(90deg, #c8962e, #f0d080, #c8962e); }
+
+.order-card-body {
+  padding: 1.2rem 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  align-items: start;
+}
+
+.order-type-icon { font-size: 2rem; margin-bottom: 0.3rem; }
+.order-names {
+  font-family: 'Noto Serif Devanagari', serif;
+  font-size: 1.3rem; font-weight: 600;
+  color: #1a1008; margin-bottom: 0.3rem;
+}
+.order-names .amp { color: #c8962e; font-style: italic; }
+.order-type-label {
+  display: inline-block;
+  font-family: 'Noto Sans Devanagari', sans-serif;
+  font-size: 0.62rem; letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 0.2rem 0.7rem; border-radius: 20px; margin-bottom: 0.6rem;
+}
+.label-bride { background: #f9dde8; color: #7a1a30; border: 1px solid #d08090; }
+.label-groom { background: #fef3d8; color: #7a4a00; border: 1px solid #d0a840; }
+
+.order-details { font-family: 'Noto Sans Devanagari', sans-serif; font-size: 0.82rem; color: rgba(26,16,8,0.65); line-height: 1.8; }
+.order-detail-row { display: flex; gap: 0.5rem; align-items: center; }
+.detail-dot { width: 4px; height: 4px; border-radius: 50%; background: #c8962e; flex-shrink: 0; margin-top: 2px; }
+
+.order-meta { text-align: right; }
+.order-id { font-family: 'Noto Serif Devanagari', serif; font-size: 1rem; font-weight: 600; color: #1a1008; }
+.order-date { font-size: 0.72rem; color: rgba(26,16,8,0.45); font-family: 'Noto Sans Devanagari', sans-serif; margin: 0.3rem 0; }
+
+.status-pill {
+  display: inline-block;
+  padding: 0.3rem 0.9rem; border-radius: 20px;
+  font-size: 0.65rem; letter-spacing: 0.1em;
+  font-family: 'Noto Sans Devanagari', sans-serif;
+}
+.status-pending   { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
+.status-confirmed { background: #d4edda; color: #155724; border: 1px solid #28a745; }
+.status-printed   { background: #d1ecf1; color: #0c5460; border: 1px solid #17a2b8; }
+.status-delivered { background: #e2e3e5; color: #383d41; border: 1px solid #aaa; }
+
+.view-btn {
+  display: inline-block; margin-top: 0.8rem;
+  font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: #c8962e; font-family: 'Noto Sans Devanagari', sans-serif;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center; padding: 5rem 2rem;
+  animation: fadeUp 0.5s ease both;
+}
+.empty-icon  { font-size: 4rem; display: block; margin-bottom: 1rem; opacity: 0.5; }
+.empty-title {
+  font-family: 'Noto Serif Devanagari', serif;
+  font-size: 1.6rem; font-weight: 600; color: #f0d080;
+  margin-bottom: 0.5rem; opacity: 0.7;
+}
+.empty-sub { font-family: 'Noto Sans Devanagari', sans-serif; font-size: 0.88rem; color: rgba(255,255,255,0.4); margin-bottom: 2rem; }
+
+/* CTA */
+.cta-btn {
+  display: inline-block;
+  padding: 0.9rem 2.2rem;
+  background: linear-gradient(135deg, #c8962e, #8b5a0a);
+  color: white; border-radius: 3px;
+  font-family: 'Noto Serif Devanagari', serif;
+  font-size: 0.95rem; font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 4px 15px rgba(200,150,46,0.4);
+  transition: all 0.25s;
+}
+.cta-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(200,150,46,0.5); }
+
+@keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes riseUp   { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeUp   { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="print-orders-page">
+<div class="print-orders-wrap">
+
+  <div class="page-header">
+    <a href="{% url 'printer_card_form' %}" class="back-link">← कार्ड फॉर्म</a>
+    <h1 class="page-title">मेरे प्रिन्ट ऑर्डर</h1>
+    <p class="page-sub">{{ orders.count }} ऑर्डर मिले — {{ user.username }}</p>
+  </div>
+
+  {% if orders %}
+    {% for order in orders %}
+    <a href="{% url 'printer_card_success' order.pk %}" class="order-card" style="animation-delay:{{ forloop.counter0 }}00ms">
+
+      <div class="order-card-stripe stripe-{{ order.card_type }}"></div>
+
+      <div class="order-card-body">
+        <div>
+          <div class="order-type-icon">{% if order.card_type == 'bride' %}👰{% else %}🤵{% endif %}</div>
+          <span class="order-type-label label-{{ order.card_type }}">{{ order.get_card_type_display }}</span>
+          <div class="order-names">
+            {{ order.primary_name }}
+            <span class="amp"> &amp; </span>
+            {{ order.secondary_name }}
+          </div>
+          <div class="order-details">
+            {% if order.shaadi_date %}
+            <div class="order-detail-row">
+              <span class="detail-dot"></span>
+              <span>शादी की तारीख: <strong>{{ order.shaadi_date }}</strong></span>
+            </div>
+            {% endif %}
+            {% if order.card_type == 'bride' and order.vivah_sthal %}
+            <div class="order-detail-row">
+              <span class="detail-dot"></span>
+              <span>विवाह स्थल: {{ order.vivah_sthal|truncatechars:40 }}</span>
+            </div>
+            {% endif %}
+            {% if order.card_type == 'groom' and order.barat_destination %}
+            <div class="order-detail-row">
+              <span class="detail-dot"></span>
+              <span>बारात: {{ order.barat_destination|truncatechars:40 }}</span>
+            </div>
+            {% endif %}
+            {% if order.phone %}
+            <div class="order-detail-row">
+              <span class="detail-dot"></span>
+              <span>📞 {{ order.phone }}</span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="order-meta">
+          <div class="order-id">ऑर्डर #{{ order.pk }}</div>
+          <div class="order-date">{{ order.created_at|date:"d M Y, g:i a" }}</div>
+          <span class="status-pill status-{{ order.status }}">
+            {% if order.status == 'pending' %}⏳{% elif order.status == 'confirmed' %}✅{% elif order.status == 'printed' %}🖨{% else %}📦{% endif %}
+            {{ order.get_status_display }}
+          </span>
+          <div class="view-btn">देखें / View →</div>
+        </div>
+      </div>
+
+    </a>
+    {% endfor %}
+
+    <div style="text-align:center; margin-top:2rem;">
+      <a href="{% url 'printer_card_form' %}" class="cta-btn">+ नया कार्ड ऑर्डर करें</a>
+    </div>
+
+  {% else %}
+    <div class="empty-state">
+      <span class="empty-icon">🖨️</span>
+      <div class="empty-title">कोई ऑर्डर नहीं</div>
+      <p class="empty-sub">अभी तक कोई प्रिन्ट ऑर्डर नहीं है।<br>No print orders yet.</p>
+      <a href="{% url 'printer_card_form' %}" class="cta-btn">पहला ऑर्डर करें</a>
+    </div>
+  {% endif %}
+
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+{% block title %}ऑर्डर सफल — धंनजय प्रिन्टर्स{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@400;600;700&family=Noto+Sans+Devanagari:wght@300;400;500;600&display=swap');
+
+.success-page {
+  min-height: 90vh;
+  background: linear-gradient(135deg, #1a0808 0%, #3d1010 40%, #1a0808 100%);
+  padding: 4rem 1rem;
+  display: flex; align-items: flex-start; justify-content: center;
+  position: relative;
+}
+.success-page::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cpath d='M30 5 L35 20 L50 20 L38 30 L43 45 L30 35 L17 45 L22 30 L10 20 L25 20Z' fill='none' stroke='%23c8962e' stroke-width='0.3' opacity='0.12'/%3E%3C/svg%3E") repeat;
+}
+
+.success-wrap { position: relative; z-index: 1; max-width: 680px; width: 100%; }
+
+/* Celebration banner */
+.success-banner {
+  text-align: center;
+  margin-bottom: 2rem;
+  animation: popIn 0.6s cubic-bezier(0.23,1,0.32,1) both;
+}
+.success-icon { font-size: 4rem; display: block; margin-bottom: 0.8rem; animation: bounce 1s 0.5s ease both; }
+.success-title {
+  font-family: 'Noto Serif Devanagari', serif;
+  font-size: clamp(1.6rem, 5vw, 2.4rem);
+  color: #f0d080;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+.success-sub {
+  font-family: 'Noto Sans Devanagari', sans-serif;
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.6);
+  line-height: 1.7;
+}
+.order-id-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #c8962e, #8b5a0a);
+  color: white;
+  padding: 0.4rem 1.5rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-family: 'Noto Sans Devanagari', sans-serif;
+  margin-top: 0.8rem;
+  letter-spacing: 0.08em;
+}
+
+/* Card border */
+.card-outer {
+  padding: 3px; border-radius: 4px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(200,150,46,0.15);
+  animation: riseUp 0.5s 0.2s ease both;
+}
+.card-outer.bride-outer { background: linear-gradient(145deg, #c0507a, #f8c0d0, #c0507a); }
+.card-outer.groom-outer { background: linear-gradient(145deg, #c8962e, #f0d080, #c8962e); }
+.card-paper {
+  background: #fffdf7; border-radius: 2px; overflow: hidden; position: relative;
+  font-family: 'Noto Sans Devanagari', sans-serif;
+}
+.card-paper::before, .card-paper::after {
+  content: '卐'; position: absolute; font-size: 1.8rem;
+  color: #c8962e; opacity: 0.15;
+}
+.card-paper::before { top: 8px; left: 12px; }
+.card-paper::after  { top: 8px; right: 12px; }
+
+/* Header */
+.card-header { padding: 1rem 1.5rem 0.6rem; border-bottom: 2px solid #c8962e; }
+.header-top  { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.4rem; }
+.blessings   { font-family: 'Noto Serif Devanagari', serif; font-size: 0.78rem; color: #8b1a1a; font-weight: 600; line-height: 1.5; }
+.phone-info  { text-align: right; font-size: 0.78rem; color: #1a1008; font-weight: 600; line-height: 1.5; }
+.shop-name   { text-align: center; font-family: 'Noto Serif Devanagari', serif; font-size: 1.9rem; font-weight: 700; color: #1a1008; padding: 0.3rem 0 0.5rem; }
+.type-badge  { display: block; text-align: center; font-size: 0.68rem; letter-spacing: 0.18em; padding: 0.25rem 1.5rem; border-radius: 20px; margin: 0 auto 0.4rem; width: fit-content; font-family: 'Noto Sans Devanagari', sans-serif; }
+.badge-bride { background: linear-gradient(135deg,#f9dde8,#f0b8c8); color: #7a1a30; border: 1px solid #d08090; }
+.badge-groom { background: linear-gradient(135deg,#fef3d8,#f0d88a); color: #7a4a00; border: 1px solid #d0a840; }
+
+/* Summary body */
+.card-body   { padding: 1.2rem 2rem 1.5rem; }
+.field-row   { display: flex; align-items: baseline; border-bottom: 1.5px dotted #aaa; margin-bottom: 0.6rem; padding-bottom: 0.1rem; gap: 0.4rem; }
+.field-label { font-family: 'Noto Serif Devanagari', serif; font-size: 0.88rem; font-weight: 600; color: #1a1008; white-space: nowrap; flex-shrink: 0; }
+.field-value { font-size: 0.88rem; color: #1a1008; padding: 0 0.4rem; flex: 1; }
+.field-value.empty { color: #bbb; font-style: italic; font-size: 0.78rem; }
+.inline-row  { display: flex; align-items: baseline; gap: 0.3rem; flex-wrap: wrap; border-bottom: 1.5px dotted #aaa; margin-bottom: 0.6rem; padding-bottom: 0.1rem; }
+.il  { font-family: 'Noto Serif Devanagari', serif; font-size: 0.85rem; font-weight: 600; color: #1a1008; white-space: nowrap; }
+.iv  { font-size: 0.85rem; color: #1a1008; min-width: 60px; }
+.iv.empty { color: #ccc; }
+.section-divider { border: none; border-top: 1.5px solid #c8962e; margin: 0.7rem 0; opacity: 0.4; }
+
+/* Sig area */
+.sig-area { display: grid; grid-template-columns: 1fr 1px 1fr; min-height: 50px; margin: 0.8rem 0; }
+.sig-col  { padding: 0.3rem 0.5rem; }
+.sig-lbl  { font-family: 'Noto Serif Devanagari', serif; font-size: 0.85rem; font-weight: 600; color: #1a1008; }
+.sig-val  { font-size: 0.85rem; color: #1a1008; margin-top: 0.5rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
+.sig-div  { background: #ccc; }
+.phone-row { border-top: 2px solid #c8962e; padding-top: 0.5rem; margin-top: 0.3rem; display: flex; align-items: baseline; gap: 0.4rem; }
+
+/* Footer */
+.card-footer { background: #1a1008; padding: 0.6rem 1.5rem; }
+.footer-note { font-size: 0.72rem; color: white; line-height: 1.5; margin-bottom: 0.15rem; opacity: 0.9; font-family: 'Noto Sans Devanagari', sans-serif; }
+.footer-addr { font-size: 0.68rem; color: rgba(255,255,255,0.6); font-family: 'Noto Sans Devanagari', sans-serif; }
+
+/* Status badge */
+.status-row {
+  display: flex; align-items: center; justify-content: center; gap: 1rem;
+  margin: 1.5rem 0; flex-wrap: wrap;
+}
+.status-pill {
+  padding: 0.4rem 1.2rem; border-radius: 20px; font-size: 0.75rem;
+  letter-spacing: 0.1em; font-family: 'Noto Sans Devanagari', sans-serif;
+}
+.status-pending   { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
+.status-confirmed { background: #d4edda; color: #155724; border: 1px solid #28a745; }
+.status-printed   { background: #d1ecf1; color: #0c5460; border: 1px solid #17a2b8; }
+.status-delivered { background: #e2e3e5; color: #383d41; border: 1px solid #aaa; }
+
+/* Actions */
+.actions {
+  display: flex; gap: 1rem; justify-content: center;
+  margin-top: 1.5rem; flex-wrap: wrap;
+  animation: fadeUp 0.5s 0.4s ease both;
+}
+.action-btn { padding: 0.85rem 2rem; border: none; font-family: 'Noto Serif Devanagari', serif; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 3px; transition: all 0.25s; text-decoration: none; display: inline-block; text-align: center; }
+.btn-gold   { background: linear-gradient(135deg, #c8962e, #8b5a0a); color: white; box-shadow: 0 4px 15px rgba(200,150,46,0.4); }
+.btn-gold:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(200,150,46,0.5); }
+.btn-ghost  { background: rgba(255,255,255,0.08); color: #f0d080; border: 1px solid rgba(200,150,46,0.3); }
+.btn-ghost:hover { background: rgba(255,255,255,0.14); }
+
+@keyframes popIn  { from{opacity:0;transform:scale(0.8)} to{opacity:1;transform:scale(1)} }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 40%{transform:translateY(-14px)} 70%{transform:translateY(-6px)} }
+@keyframes riseUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+@media print {
+  .success-page{background:white;padding:0;} .success-page::before,.success-banner,.status-row,.actions{display:none!important;}
+  .card-outer{box-shadow:none;padding:0;background:none!important;} .card-paper{border:1px solid #999;}
+}
+@media(max-width:600px){ .card-body{padding:1rem;} .shop-name{font-size:1.4rem;} }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="success-page">
+<div class="success-wrap">
+
+  <!-- Banner -->
+  <div class="success-banner">
+    <span class="success-icon">🎉</span>
+    <div class="success-title">ऑर्डर सफलतापूर्वक सबमिट!</div>
+    <div class="success-sub">
+      आपका कार्ड ऑर्डर प्राप्त हो गया है। हम जल्द ही संपर्क करेंगे।<br>
+      <em style="opacity:0.7">Your card order has been received. We will contact you shortly.</em>
+    </div>
+    <div class="order-id-badge">ऑर्डर #{{ order.pk }} — {{ order.get_status_display }}</div>
+  </div>
+
+  <!-- Status row -->
+  <div class="status-row">
+    {% for val, label in order.STATUS_CHOICES %}
+    <span class="status-pill status-{{ val }}" style="{% if order.status != val %}opacity:0.3{% endif %}">
+      {% if val == 'pending' %}⏳{% elif val == 'confirmed' %}✅{% elif val == 'printed' %}🖨{% else %}📦{% endif %}
+      {{ label }}
+    </span>
+    {% endfor %}
+  </div>
+
+  <!-- CARD SUMMARY -->
+  <div class="card-outer {% if order.card_type == 'bride' %}bride-outer{% else %}groom-outer{% endif %}">
+  <div class="card-paper">
+
+    <div class="card-header">
+      <div class="header-top">
+        <div class="blessings">जय श्री राम<br>।। जय माता दी ।।</div>
+        <div class="phone-info"><strong>M.: 9312666004</strong><br>9315705376</div>
+      </div>
+      <div class="shop-name">धंनजय प्रिन्टर्स एण्ड कार्ड</div>
+      <span class="type-badge {% if order.card_type == 'bride' %}badge-bride{% else %}badge-groom{% endif %}">
+        {% if order.card_type == 'bride' %}लड़की का कार्ड फॉर्म{% else %}लड़के का कार्ड फॉर्म{% endif %}
+      </span>
+    </div>
+
+    <div class="card-body">
+
+      <!-- Primary person -->
+      <div class="field-row">
+        <span class="field-label">{% if order.card_type == 'bride' %}लड़की का नाम{% else %}लड़के का नाम{% endif %}</span>
+        <span class="field-value {% if not order.primary_name %}empty{% endif %}">{{ order.primary_name|default:"—" }}</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">पिता का नाम</span>
+        <span class="field-value {% if not order.primary_father_name %}empty{% endif %}">{{ order.primary_father_name|default:"—" }}</span>
+      </div>
+      {% if order.primary_dada_name %}
+      <div class="field-row">
+        <span class="field-label">दादा का नाम</span>
+        <span class="field-value">{{ order.primary_dada_name }}</span>
+      </div>
+      {% endif %}
+      <div class="field-row">
+        <span class="field-label">{% if order.card_type == 'bride' %}लड़की का पता{% else %}लड़के का पता{% endif %}</span>
+        <span class="field-value">{{ order.primary_address|default:"—" }}</span>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Secondary person -->
+      <div class="field-row">
+        <span class="field-label">{% if order.card_type == 'bride' %}लड़के का नाम{% else %}लड़की का नाम{% endif %}</span>
+        <span class="field-value {% if not order.secondary_name %}empty{% endif %}">{{ order.secondary_name|default:"—" }}</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">पिता का नाम</span>
+        <span class="field-value">{{ order.secondary_father_name|default:"—" }}</span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">{% if order.card_type == 'bride' %}लड़के का पता{% else %}लड़की का पता{% endif %}</span>
+        <span class="field-value">{{ order.secondary_address|default:"—" }}</span>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Sagaai -->
+      {% if order.sagaai_date or order.sagaai_time %}
+      <div class="inline-row">
+        <span class="il">सगाई की तारीख</span>
+        <span class="iv {% if not order.sagaai_date %}empty{% endif %}">{{ order.sagaai_date|default:"—" }}</span>
+        {% if order.sagaai_time %}
+        <span class="il">समय</span>
+        <span class="iv">{{ order.sagaai_time }}</span>
+        {% endif %}
+        {% if order.sagaai_preetibhoj %}
+        <span class="il">प्रीतिभोज</span>
+        <span class="iv">{{ order.sagaai_preetibhoj }}</span>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <!-- Shaadi -->
+      {% if order.shaadi_date %}
+      {% if order.card_type == 'bride' %}
+      <div class="inline-row">
+        <span class="il">शादी की तारीख</span>
+        <span class="iv">{{ order.shaadi_date }}</span>
+        {% if order.barat_swagat %}<span class="il">बारात स्वागत</span><span class="iv">{{ order.barat_swagat }}</span>{% endif %}
+        {% if order.shaadi_preetibhoj %}<span class="il">प्रीतिभोज</span><span class="iv">{{ order.shaadi_preetibhoj }}</span>{% endif %}
+      </div>
+      {% if order.vivah_sthal %}
+      <div class="field-row">
+        <span class="field-label">विवाह स्थल</span>
+        <span class="field-value">{{ order.vivah_sthal }}</span>
+      </div>
+      {% endif %}
+      {% else %}
+      <div class="inline-row">
+        <span class="il">शादी की तारीख</span>
+        <span class="iv">{{ order.shaadi_date }}</span>
+        {% if order.ghudchadi_time %}<span class="il">घुड़चढ़ी का समय</span><span class="iv">{{ order.ghudchadi_time }}</span>{% endif %}
+        {% if order.barat_prasthan %}<span class="il">बारात प्रस्थान</span><span class="iv">{{ order.barat_prasthan }}</span>{% endif %}
+      </div>
+      {% if order.barat_destination %}
+      <div class="field-row">
+        <span class="field-label">बारात कहाँ जाएगी</span>
+        <span class="field-value">{{ order.barat_destination }}</span>
+      </div>
+      {% endif %}
+      {% if order.reception_date %}
+      <div class="inline-row">
+        <span class="il">रिशेप्शन की तारीख</span>
+        <span class="iv">{{ order.reception_date }}</span>
+        {% if order.reception_preetibhoj %}<span class="il">प्रीतिभोज</span><span class="iv">{{ order.reception_preetibhoj }}</span>{% endif %}
+        {% if order.reception_sthal %}<span class="il">स्थल</span><span class="iv">{{ order.reception_sthal }}</span>{% endif %}
+      </div>
+      {% endif %}
+      {% endif %}
+      {% endif %}
+
+      {% if order.bal_aakanksha %}
+      <div class="field-row">
+        <span class="field-label">बाल आकांक्षा</span>
+        <span class="field-value">{{ order.bal_aakanksha }}</span>
+      </div>
+      {% endif %}
+
+      {% if order.extra_info %}
+      <div class="field-row">
+        <span class="field-value" style="font-style:italic;opacity:0.7;">{{ order.extra_info }}</span>
+      </div>
+      {% endif %}
+
+      <!-- Signatures -->
+      <div class="sig-area">
+        <div class="sig-col">
+          <div class="sig-lbl">दर्शनाभिलाषी :–</div>
+          {% if order.darshanaabhilashi %}<div class="sig-val">{{ order.darshanaabhilashi }}</div>{% endif %}
+        </div>
+        <div class="sig-div"></div>
+        <div class="sig-col">
+          <div class="sig-lbl">विनीत :–</div>
+          {% if order.vineet %}<div class="sig-val">{{ order.vineet }}</div>{% endif %}
+        </div>
+      </div>
+
+      {% if order.phone %}
+      <div class="phone-row">
+        <span class="field-label">फोन नं.</span>
+        <span class="field-value">{{ order.phone }}</span>
+      </div>
+      {% endif %}
+
+    </div><!-- /card-body -->
+
+    <div class="card-footer">
+      <p class="footer-note">कृपया प्रूफ अच्छी तरह चेक कर लें, छापने के बाद हमारी कोई जिम्मेदारी नहीं होगी</p>
+      <p class="footer-addr">पता :– सोनिया नगर, गली न. 4, निकट पटवा मन्दिर, इन्द्रापुरी आश्रम रोड, लोनी, गा.बाद</p>
+    </div>
+
+  </div><!-- /card-paper -->
+  </div><!-- /card-outer -->
+
+  <!-- Actions -->
+  <div class="actions">
+    <button onclick="window.print()" class="action-btn btn-gold">🖨️ प्रिन्ट करें</button>
+    <a href="{% url 'printer_card_form' %}" class="action-btn btn-ghost">+ नया ऑर्डर</a>
+    {% if user.is_authenticated %}
+    <a href="{% url 'my_printer_orders' %}" class="action-btn btn-ghost">📋 मेरे ऑर्डर</a>
+    {% endif %}
+  </div>
+
+</div>
+</div>
+{% endblock %}

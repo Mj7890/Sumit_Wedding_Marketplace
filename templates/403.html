@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Access Denied — Arts By Graphic{% endblock %}
+{% block content %}
+<div style="min-height:80vh;display:flex;align-items:center;justify-content:center;padding:4rem 2rem;
+  background:radial-gradient(ellipse 70% 60% at 50% 40%,#f0e4d4,var(--cream));text-align:center;">
+  <div>
+    <div style="font-size:5rem;margin-bottom:1rem;">🚫</div>
+    <p style="font-size:0.7rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);margin-bottom:0.8rem;">✦ Access Denied</p>
+    <h1 style="font-family:'Cormorant Garamond',serif;font-size:3rem;font-weight:300;color:var(--deep);margin-bottom:1rem;">
+      Permission Required
+    </h1>
+    <p style="font-size:0.9rem;opacity:0.6;line-height:1.7;max-width:400px;margin:0 auto 2rem;">
+      You don't have permission to access this page.<br>
+      This area is restricted to administrators only.
+    </p>
+    <a href="{% url 'home' %}" class="btn btn-dark">← Back to Home</a>
+  </div>
+</div>
+{% endblock %}

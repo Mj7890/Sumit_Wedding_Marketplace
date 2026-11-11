@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Login — Arts By Graphic{% endblock %}
+{% block extra_css %}
+<style>
+.auth-wrap{min-height:85vh;display:flex;align-items:center;justify-content:center;padding:4rem 2rem;
+  background:radial-gradient(ellipse 70% 60% at 50% 40%,#f0e4d4,var(--cream));}
+.auth-card{background:white;padding:3rem;border-radius:8px;box-shadow:0 20px 60px var(--shadow);width:100%;max-width:430px;}
+.auth-title{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:300;margin-bottom:0.3rem;color:var(--deep);}
+.auth-sub{font-size:0.83rem;opacity:0.6;margin-bottom:2rem;line-height:1.6;}
+.auth-footer{text-align:center;margin-top:1.5rem;font-size:0.82rem;opacity:0.6;}
+.auth-footer a{color:var(--gold);text-decoration:none;}
+
+/* Password field wrapper */
+.pw-wrap { position:relative; margin-bottom:0.8rem; }
+.pw-wrap .form-input { padding-right:2.8rem; margin-bottom:0; }
+.pw-toggle {
+  position:absolute; right:0.9rem; top:50%; transform:translateY(-50%);
+  background:none; border:none; cursor:pointer; font-size:1rem; opacity:0.45;
+  transition:opacity 0.2s; padding:0;
+}
+.pw-toggle:hover { opacity:0.9; }
+
+/* Forgot password link */
+.forgot-row {
+  display:flex; justify-content:flex-end; margin-top:-0.3rem; margin-bottom:1rem;
+}
+.forgot-link {
+  font-size:0.75rem; color:var(--gold); text-decoration:none;
+  letter-spacing:0.05em; transition:opacity 0.2s;
+}
+.forgot-link:hover { opacity:0.75; text-decoration:underline; }
+
+/* Divider */
+.auth-divider {
+  display:flex; align-items:center; gap:1rem; margin:1.5rem 0;
+  font-size:0.7rem; color:rgba(0,0,0,0.3); letter-spacing:0.1em;
+}
+.auth-divider::before,.auth-divider::after {
+  content:''; flex:1; height:1px; background:rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <p class="eyebrow">✦ Welcome Back</p>
+    <h1 class="auth-title">Login</h1>
+    <p class="auth-sub">Sign in to continue designing your perfect invitation.</p>
+
+    {% if messages %}{% for m in messages %}
+    <div style="background:#fef9ec;color:#856404;border:1px solid #ffc107;padding:0.7rem 1rem;border-radius:6px;font-size:0.83rem;margin-bottom:1rem;">{{ m }}</div>
+    {% endfor %}{% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+
+      <label class="form-label">Username</label>
+      <input type="text" name="username" class="form-input" placeholder="Your username" autofocus>
+
+      <label class="form-label">Password</label>
+      <div class="pw-wrap">
+        <input type="password" name="password" class="form-input" placeholder="Your password" id="loginPw">
+        <button type="button" class="pw-toggle" onclick="togglePw('loginPw',this)">👁</button>
+      </div>
+
+      <!-- Forgot password link -->
+      <div class="forgot-row">
+        <a href="{% url 'password_reset' %}" class="forgot-link">Forgot password?</a>
+      </div>
+
+      {% if form.errors %}
+      <div style="background:#fdf0f0;color:#c0392b;border:1px solid #f5c6cb;padding:0.7rem 1rem;border-radius:6px;font-size:0.83rem;margin-bottom:1rem;">
+        ❌ Invalid username or password. Please try again.
+      </div>
+      {% endif %}
+
+      <input type="hidden" name="next" value="{{ next }}">
+      <button type="submit" class="btn btn-dark" style="width:100%;">Login →</button>
+    </form>
+
+    <div class="auth-divider">or</div>
+    <p class="auth-footer">New here? <a href="{% url 'register' %}">Create an account</a></p>
+  </div>
+</div>
+<script>
+function togglePw(id, btn) {
+  const inp = document.getElementById(id);
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+  else { inp.type = 'password'; btn.textContent = '👁'; }
+}
+</script>
+{% endblock %}

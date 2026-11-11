@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Page Not Found — Arts By Graphic{% endblock %}
+{% block content %}
+<div style="min-height:80vh;display:flex;align-items:center;justify-content:center;padding:4rem 2rem;
+  background:radial-gradient(ellipse 70% 60% at 50% 40%,#f0e4d4,var(--cream));text-align:center;">
+  <div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:8rem;font-weight:300;color:var(--gold);line-height:1;margin-bottom:0.5rem;">404</div>
+    <p style="font-size:0.7rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);margin-bottom:0.8rem;">✦ Page Not Found</p>
+    <h1 style="font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-weight:300;color:var(--deep);margin-bottom:1rem;">
+      This page doesn't exist
+    </h1>
+    <p style="font-size:0.9rem;opacity:0.6;line-height:1.7;max-width:400px;margin:0 auto 2rem;">
+      The page you're looking for may have been moved, deleted, or never existed.
+    </p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+      <a href="{% url 'home' %}" class="btn btn-dark">← Back to Home</a>
+      <a href="{% url 'marketplace' %}" class="btn btn-outline">Browse Cards</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

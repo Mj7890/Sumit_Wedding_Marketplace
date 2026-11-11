@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block title %}Collection — Arts By Graphic{% endblock %}
+
+{% block extra_css %}
+<style>
+.marketplace-hero{padding:5rem 3rem 3rem;text-align:center;
+  background:radial-gradient(ellipse 80% 60% at 50% 40%,#f0e4d4,var(--cream));}
+
+/* Category pills with icons */
+.cat-filter-bar {
+  display:flex; gap:0.6rem; flex-wrap:wrap;
+  justify-content:center; margin-bottom:1.5rem;
+}
+.cat-pill {
+  display:inline-flex; align-items:center; gap:0.4rem;
+  padding:0.5rem 1.1rem; border-radius:30px;
+  border:1.5px solid rgba(59,42,42,0.12);
+  background:white; cursor:pointer; text-decoration:none; color:var(--text);
+  font-size:0.75rem; font-weight:500; letter-spacing:0.04em;
+  transition:all 0.25s; box-shadow:0 1px 6px var(--shadow);
+}
+.cat-pill:hover  { border-color:var(--gold); color:var(--gold); transform:translateY(-1px); box-shadow:0 4px 14px var(--shadow); }
+.cat-pill.active { background:var(--deep); color:white; border-color:var(--deep); box-shadow:0 4px 14px rgba(59,42,42,0.25); }
+.cat-pill-icon   { font-size:1rem; }
+
+/* Sort/search bar */
+.search-row{display:flex;gap:0.8rem;max-width:560px;margin:0 auto 2rem;flex-wrap:wrap;}
+.search-input{flex:1;min-width:200px;padding:0.75rem 1rem;border:1px solid rgba(59,42,42,0.15);
+  border-radius:4px;background:white;font-family:'Jost',sans-serif;font-size:0.9rem;outline:none;transition:border-color 0.2s;}
+.search-input:focus{border-color:var(--gold);}
+.sort-select{padding:0.75rem 1rem;border:1px solid rgba(59,42,42,0.15);border-radius:4px;
+  font-family:'Jost',sans-serif;font-size:0.85rem;background:white;cursor:pointer;outline:none;}
+
+/* Empty state */
+.empty-state{text-align:center;padding:5rem 2rem;opacity:0.5;grid-column:1/-1;}
+.empty-state p{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-style:italic;margin-bottom:1rem;}
+
+.results-count{font-size:0.78rem;opacity:0.5;text-align:center;margin-bottom:1.5rem;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="marketplace-hero">
+  <p class="eyebrow">✦ Wedding Card Collection</p>
+  <h1 class="section-title">Find your <em>perfect</em> invitation</h1>
+</div>
+
+<section class="section">
+
+  <!-- Category filter pills -->
+  <div class="cat-filter-bar">
+    <a href="{% url 'marketplace' %}{% if search %}?q={{ search }}{% endif %}"
+       class="cat-pill {% if not selected_category %}active{% endif %}">
+      <span class="cat-pill-icon">🃏</span> All Cards
+    </a>
+    {% for cat in categories %}
+    <a href="{% url 'marketplace' %}?category={{ cat.slug }}{% if search %}&q={{ search }}{% endif %}"
+       class="cat-pill {% if selected_category == cat.slug %}active{% endif %}">
+      <span class="cat-pill-icon">
+        {% if cat.slug == 'hindu' %}🕉
+        {% elif cat.slug == 'south-indian' %}🌺
+        {% elif cat.slug == 'muslim' %}☪
+        {% elif cat.slug == 'christian' %}✝
+        {% elif cat.slug == 'marathi' %}🌾
+        {% elif cat.slug == 'bengali' %}🎨
+        {% elif cat.slug == 'sikh' %}☬
+        {% elif cat.slug == 'rajasthani' %}🏰
+        {% elif cat.slug == 'generic' %}💌
+        {% else %}🃏{% endif %}
+      </span>
+      {{ cat.name }} Cards
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- Search + Sort -->
+  <form method="get" class="search-row">
+    <input type="text" name="q" value="{{ search|default:'' }}"
+           placeholder="🔍  Search designs..." class="search-input">
+    {% if selected_category %}
+    <input type="hidden" name="category" value="{{ selected_category }}">
+    {% endif %}
+    <select name="sort" class="sort-select" onchange="this.form.submit()">
+      <option value="newest"     {% if sort == 'newest'     %}selected{% endif %}>Newest First</option>
+      <option value="price_asc"  {% if sort == 'price_asc'  %}selected{% endif %}>Price ↑</option>
+      <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Price ↓</option>
+    </select>
+    <button type="submit" class="btn btn-dark">Search</button>
+  </form>
+
+  <p class="results-count drop-fast">
+    {{ cards|length }} design{{ cards|length|pluralize }} found
+    {% if selected_category %}in <strong>{{ selected_category|title }}</strong>{% endif %}
+    {% if search %}for <strong>"{{ search }}"</strong>{% endif %}
+  </p>
+
+  <!-- Cards grid -->
+  <div class="cards-grid">
+    {% for card in cards %}
+    <a href="{% url 'card_detail' card.slug %}" class="product-card">
+      <div class="product-thumb">
+        {% if card.image %}
+        <img src="{{ card.image.url }}" alt="{{ card.name }}"
+             style="width:100%;height:100%;object-fit:cover;display:block;">
+        {% else %}
+        <div class="card-visual palette-{{ card.palette }}" style="height:100%;border-radius:0;">
+          <div class="card-ornament-display">{{ card.ornament }}</div>
+          <div class="card-sample-text">{{ card.name }}</div>
+        </div>
+        {% endif %}
+      </div>
+      <div class="product-info">
+        <div class="product-name">{{ card.name }}</div>
+        <div style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;
+                    color:var(--gold);opacity:0.7;margin-bottom:0.3rem;">
+          {{ card.category.name|default:"Generic" }} Cards
+        </div>
+        <div class="stars">
+          {% for i in "12345" %}{% if forloop.counter <= card.average_rating %}★{% else %}☆{% endif %}{% endfor %}
+          <span style="font-size:0.65rem;opacity:0.4;margin-left:0.3rem">({{ card.reviews.count }})</span>
+        </div>
+        <div class="product-meta">
+          <span class="product-style">{{ card.get_palette_display }}</span>
+          <span class="product-price">₹{{ card.price }}</span>
+        </div>
+      </div>
+    </a>
+    {% empty %}
+    <div class="empty-state">
+      <p>No designs found</p>
+      <a href="{% url 'marketplace' %}" class="btn btn-outline">Clear filters</a>
+    </div>
+    {% endfor %}
+  </div>
+
+</section>
+{% endblock %}

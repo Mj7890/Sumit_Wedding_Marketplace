@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}My Orders — Vows & Blooms{% endblock %}
+{% block extra_css %}
+<style>
+.orders-wrap{max-width:800px;margin:0 auto;padding:5rem 2rem;}
+.orders-wrap h1{font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-weight:300;margin-bottom:2rem;color:var(--deep);}
+.order-card{background:white;padding:1.5rem 2rem;border-radius:3px;box-shadow:0 2px 15px var(--shadow);
+  margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;
+  text-decoration:none;color:inherit;transition:transform 0.2s;}
+.order-card:hover{transform:translateX(4px);}
+.order-id{font-family:'Cormorant Garamond',serif;font-size:1.2rem;}
+.order-date{font-size:0.75rem;opacity:0.5;margin-top:0.2rem;}
+.order-items-count{font-size:0.8rem;opacity:0.6;margin-top:0.3rem;}
+.status-badge{padding:0.3rem 0.9rem;border-radius:20px;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;}
+.status-pending{background:#fff3cd;color:#856404;}
+.status-confirmed{background:#d4edda;color:#155724;}
+.status-processing{background:#d1ecf1;color:#0c5460;}
+.status-delivered{background:#e2e3e5;color:#383d41;}
+.status-cancelled{background:#f8d7da;color:#721c24;}
+.order-total{font-size:1.2rem;color:var(--gold);}
+</style>
+{% endblock %}
+{% block content %}
+<div class="orders-wrap">
+  <p class="eyebrow">✦ Account</p>
+  <h1>My Orders</h1>
+  {% for order in orders %}
+  <a href="{% url 'order_detail' order.pk %}" class="order-card">
+    <div>
+      <div class="order-id">Order #{{ order.pk }}</div>
+      <div class="order-date">{{ order.created_at|date:"F j, Y, g:i a" }}</div>
+      <div class="order-items-count">{{ order.items.count }} item{{ order.items.count|pluralize }}</div>
+    </div>
+    <div style="text-align:right;">
+      <span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span>
+      <div class="order-total" style="margin-top:0.5rem;">₹{{ order.total }}</div>
+    </div>
+  </a>
+  {% empty %}
+  <div style="text-align:center;padding:4rem;opacity:0.5;">
+    <p style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-style:italic;margin-bottom:1rem;">No orders yet</p>
+    <a href="{% url 'marketplace' %}" class="btn btn-dark">Browse Collection</a>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

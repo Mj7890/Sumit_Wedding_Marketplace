@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+{% block title %}Upload Collection — Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+.admin-page { display:grid; grid-template-columns:380px 1fr; gap:0; min-height:100vh; }
+
+/* ── SIDEBAR UPLOAD FORM ── */
+.upload-sidebar {
+  background: linear-gradient(160deg,#1a0a28,#0d0d1a);
+  padding: 2rem 1.8rem; position: sticky; top: 60px;
+  height: calc(100vh - 60px); overflow-y: auto;
+}
+.upload-sidebar::-webkit-scrollbar { width:4px; }
+.upload-sidebar::-webkit-scrollbar-thumb { background:rgba(200,150,46,0.3); border-radius:2px; }
+
+.sidebar-title {
+  font-family:'Cormorant Garamond',serif; font-size:1.8rem;
+  font-weight:300; color:#f0d080; margin-bottom:0.3rem;
+}
+.sidebar-sub { font-size:0.78rem; color:rgba(255,255,255,0.4); margin-bottom:2rem; }
+
+.up-label  { font-size:0.62rem; letter-spacing:0.18em; text-transform:uppercase; color:#c8962e; display:block; margin-bottom:0.4rem; margin-top:1rem; }
+.up-input  { width:100%; padding:0.7rem 0.9rem; border:1px solid rgba(200,150,46,0.2); border-radius:4px; background:rgba(255,255,255,0.06); color:white; font-family:'Jost',sans-serif; font-size:0.88rem; outline:none; transition:border-color 0.2s; margin-bottom:0; }
+.up-input:focus { border-color:#c8962e; background:rgba(255,255,255,0.1); }
+.up-input::placeholder { color:rgba(255,255,255,0.2); }
+.up-select { appearance:none; cursor:pointer; }
+.up-textarea { resize:vertical; min-height:70px; }
+
+/* Image drop zone */
+.drop-zone {
+  border:2px dashed rgba(200,150,46,0.3); border-radius:8px;
+  padding:2rem 1rem; text-align:center; cursor:pointer;
+  transition:all 0.3s; background:rgba(255,255,255,0.03);
+  position:relative; overflow:hidden;
+}
+.drop-zone.drag-over { border-color:#c8962e; background:rgba(200,150,46,0.08); }
+.drop-zone-icon { font-size:2.2rem; margin-bottom:0.5rem; opacity:0.6; }
+.drop-zone-text { font-size:0.8rem; color:rgba(255,255,255,0.45); line-height:1.5; }
+.drop-zone input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; }
+.drop-preview { width:100%; height:160px; object-fit:cover; border-radius:6px; margin-top:0.8rem; display:none; }
+
+
+
+
+
+.submit-btn {
+  width:100%; padding:1rem; margin-top:1.5rem;
+  background:linear-gradient(135deg,#c8962e,#7a5010);
+  color:white; border:none; border-radius:6px;
+  font-family:'Jost',sans-serif; font-size:0.8rem; font-weight:600;
+  letter-spacing:0.12em; text-transform:uppercase; cursor:pointer;
+  transition:all 0.25s; display:flex; align-items:center; justify-content:center; gap:0.5rem;
+}
+.submit-btn:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(200,150,46,0.45); }
+
+
+
+/* ── MAIN CONTENT ── */
+.upload-main { background:#f8f4ef; padding:2rem 2.5rem; }
+
+.main-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; flex-wrap:wrap; gap:1rem; }
+.main-title { font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:300; color:#1a0a0a; }
+
+/* Search + filter bar */
+.collection-bar { display:flex; gap:0.8rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+.col-search { flex:1; min-width:200px; padding:0.65rem 1rem; border:1px solid rgba(0,0,0,0.12); border-radius:6px; font-family:'Jost',sans-serif; font-size:0.88rem; outline:none; background:white; }
+.col-search:focus { border-color:var(--gold); }
+.col-filter { padding:0.65rem 1rem; border:1px solid rgba(0,0,0,0.12); border-radius:6px; background:white; font-family:'Jost',sans-serif; font-size:0.85rem; cursor:pointer; outline:none; }
+
+/* Stats bar */
+.coll-stats { display:flex; gap:1.5rem; margin-bottom:1.8rem; flex-wrap:wrap; }
+.coll-stat  { text-align:center; }
+.coll-stat-n { font-family:'Cormorant Garamond',serif; font-size:1.8rem; font-weight:300; color:var(--gold); line-height:1; }
+.coll-stat-l { font-size:0.62rem; letter-spacing:0.15em; text-transform:uppercase; color:rgba(0,0,0,0.4); margin-top:0.2rem; }
+
+/* Card grid */
+.coll-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:1.2rem; }
+.coll-card {
+  background:white; border-radius:10px; overflow:hidden;
+  box-shadow:0 2px 12px rgba(0,0,0,0.07);
+  transition:all 0.3s cubic-bezier(0.23,1,0.32,1);
+  position:relative;
+}
+.coll-card:hover { transform:translateY(-4px); box-shadow:0 10px 30px rgba(0,0,0,0.13); }
+.coll-thumb { height:220px; position:relative; overflow:hidden; }
+.coll-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+.coll-thumb .no-img {
+  width:100%; height:100%; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:0.5rem; font-size:2.5rem;
+}
+.coll-status {
+  position:absolute; top:0.6rem; left:0.6rem;
+  font-size:0.55rem; letter-spacing:0.1em; text-transform:uppercase;
+  padding:0.2rem 0.55rem; border-radius:20px;
+}
+.st-active   { background:#d4edda; color:#155724; }
+.st-inactive { background:#f8d7da; color:#721c24; }
+.st-featured { position:absolute; top:0.6rem; right:0.6rem; background:linear-gradient(135deg,#c8962e,#7a5010); color:white; font-size:0.52rem; letter-spacing:0.1em; text-transform:uppercase; padding:0.2rem 0.55rem; border-radius:20px; }
+
+.coll-info { padding:0.9rem 1rem 0.7rem; }
+.coll-name  { font-family:'Cormorant Garamond',serif; font-size:1rem; font-weight:600; color:#1a0a0a; margin-bottom:0.2rem; }
+.coll-meta  { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem; }
+.coll-price { font-size:0.88rem; color:var(--gold); font-weight:500; }
+.coll-cat   { font-size:0.6rem; letter-spacing:0.1em; text-transform:uppercase; color:rgba(0,0,0,0.4); }
+
+/* Action buttons */
+.coll-actions { display:flex; gap:0.4rem; padding:0 1rem 0.9rem; }
+.ca-btn { flex:1; padding:0.45rem; border-radius:5px; border:none; font-size:0.65rem; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; transition:all 0.2s; font-family:'Jost',sans-serif; font-weight:500; }
+.ca-toggle { background:#e8f5e9; color:#2e7d32; }
+.ca-toggle:hover { background:#c8e6c9; }
+.ca-toggle.inactive { background:#fce4ec; color:#c62828; }
+.ca-toggle.inactive:hover { background:#f8bbd9; }
+.ca-feat { background:#fff8e1; color:#f57f17; }
+.ca-feat:hover { background:#fff176; }
+.ca-del  { background:#fce4ec; color:#c62828; }
+.ca-del:hover  { background:#f8bbd9; }
+
+@media(max-width:900px){
+  .admin-page { grid-template-columns:1fr; }
+  .upload-sidebar { position:static; height:auto; }
+  .upload-main { padding:1.5rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+
+  <!-- ══ SIDEBAR: UPLOAD FORM ══ -->
+  <div class="upload-sidebar">
+    <div class="sidebar-title">Upload Card</div>
+    <div class="sidebar-sub">Add new wedding card to collection</div>
+
+    {% if messages %}
+      {% for m in messages %}
+      <div style="background:{% if 'error' in m.tags %}rgba(220,53,69,0.15){% else %}rgba(200,150,46,0.15){% endif %};
+                  border:1px solid {% if 'error' in m.tags %}rgba(220,53,69,0.3){% else %}rgba(200,150,46,0.3){% endif %};
+                  color:{% if 'error' in m.tags %}#ff6b6b{% else %}#f0d080{% endif %};
+                  padding:0.7rem 1rem;border-radius:6px;font-size:0.82rem;margin-bottom:1rem;">
+        {{ m }}
+      </div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" id="uploadForm">
+      {% csrf_token %}
+      <input type="hidden" name="action"   value="add_card">
+      <input type="hidden" name="ornament" value="❦">
+      <input type="hidden" name="palette"  value="floral">
+
+      <!-- 1. Card Image -->
+      <label class="up-label">Card Image</label>
+      <div class="drop-zone" id="dropZone">
+        <div id="dropContent">
+          <div class="drop-zone-icon">🖼</div>
+          <div class="drop-zone-text">
+            Click or drag &amp; drop image<br>
+            <span style="font-size:0.68rem;opacity:0.4;">JPG, PNG, WEBP · Max 5MB</span>
+          </div>
+        </div>
+        <img id="dropPreview" class="drop-preview" alt="Preview">
+        <input type="file" name="image" accept="image/*" id="imgInput">
+      </div>
+
+      <!-- 2. Card Name -->
+      <label class="up-label" style="margin-top:1.2rem;">Card Name *</label>
+      <input type="text" name="name" class="up-input"
+             placeholder="e.g. Sacred Ganesh, Nikah Elegance…" required>
+
+      <!-- 3. Category -->
+      <label class="up-label" style="margin-top:1rem;">Category *</label>
+      <select name="category" class="up-input up-select" required>
+        <option value="" disabled selected>— Select Category —</option>
+        {% for cat in categories %}
+        <option value="{{ cat.id }}">{{ cat.name }} Cards</option>
+        {% endfor %}
+      </select>
+
+      <!-- 4. Description -->
+      <label class="up-label" style="margin-top:1rem;">Description</label>
+      <textarea name="description" class="up-input up-textarea"
+                placeholder="Describe this card design briefly…"></textarea>
+
+      <!-- 5. Price -->
+      <label class="up-label" style="margin-top:1rem;">Price (₹) *</label>
+      <div style="position:relative;">
+        <span style="position:absolute;left:0.9rem;top:50%;transform:translateY(-50%);
+                     color:rgba(255,255,255,0.35);font-size:0.9rem;">₹</span>
+        <input type="number" name="price" class="up-input"
+               style="padding-left:2rem;"
+               placeholder="999" min="1" step="1" required>
+      </div>
+
+      <button type="submit" class="submit-btn" style="margin-top:1.8rem;">
+        ⬆&nbsp; Upload Card
+      </button>
+    </form>
+  </div>
+
+  <!-- ══ MAIN: COLLECTION GRID ══ -->
+  <div class="upload-main">
+    <div class="main-header">
+      <div class="main-title">Card Collection</div>
+      <a href="{% url 'dashboard' %}" class="btn btn-outline">← Dashboard</a>
+    </div>
+
+    <!-- Stats -->
+    <div class="coll-stats">
+      <div class="coll-stat"><div class="coll-stat-n">{{ cards|length }}</div><div class="coll-stat-l">Total Cards</div></div>
+      <div class="coll-stat"><div class="coll-stat-n">{{ cards|length }}</div><div class="coll-stat-l">Active</div></div>
+      <div class="coll-stat"><div class="coll-stat-n">{{ categories|length }}</div><div class="coll-stat-l">Categories</div></div>
+    </div>
+
+    <!-- Search -->
+    <div class="collection-bar">
+      <input type="text" class="col-search" id="collSearch" placeholder="🔍 Search cards...">
+      <select class="col-filter" id="collFilter">
+        <option value="">All Palettes</option>
+        {% for val, label in palette_choices %}
+        <option value="{{ val }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+      <select class="col-filter" id="collStatus">
+        <option value="">All Status</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+        <option value="featured">Featured</option>
+      </select>
+    </div>
+
+    <!-- Cards Grid -->
+    <div class="coll-grid" id="collGrid">
+      {% for card in cards %}
+      <div class="coll-card" data-name="{{ card.name|lower }}" data-palette="{{ card.palette }}" data-status="{% if card.is_active %}active{% else %}inactive{% endif %}{% if card.is_featured %} featured{% endif %}">
+        <div class="coll-thumb">
+          {% if card.image %}
+          <img src="{{ card.image.url }}" alt="{{ card.name }}">
+          {% else %}
+          <div class="no-img palette-{{ card.palette }}">
+            <span>{{ card.ornament }}</span>
+          </div>
+          {% endif %}
+          <span class="coll-status {% if card.is_active %}st-active{% else %}st-inactive{% endif %}">
+            {% if card.is_active %}Active{% else %}Inactive{% endif %}
+          </span>
+          {% if card.is_featured %}<span class="st-featured">⭐ Featured</span>{% endif %}
+        </div>
+        <div class="coll-info">
+          <div class="coll-name">{{ card.name }}</div>
+          <div class="coll-meta">
+            <span class="coll-cat">{{ card.category|default:"Uncategorized" }}</span>
+            <span class="coll-price">₹{{ card.price }}</span>
+          </div>
+        </div>
+        <div class="coll-actions">
+          <form method="post" style="flex:1;display:flex;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="toggle_card">
+            <input type="hidden" name="card_id" value="{{ card.pk }}">
+            <button type="submit" class="ca-btn ca-toggle {% if not card.is_active %}inactive{% endif %}">
+              {% if card.is_active %}Deactivate{% else %}Activate{% endif %}
+            </button>
+          </form>
+          <form method="post" style="flex:1;display:flex;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="toggle_featured">
+            <input type="hidden" name="card_id" value="{{ card.pk }}">
+            <button type="submit" class="ca-btn ca-feat">{% if card.is_featured %}★ Unfeature{% else %}☆ Feature{% endif %}</button>
+          </form>
+          <form method="post" onsubmit="return confirm('Delete {{ card.name }}?')">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete_card">
+            <input type="hidden" name="card_id" value="{{ card.pk }}">
+            <button type="submit" class="ca-btn ca-del">🗑</button>
+          </form>
+        </div>
+      </div>
+      {% empty %}
+      <div style="grid-column:1/-1;text-align:center;padding:4rem;opacity:0.5;">
+        <div style="font-size:3rem;margin-bottom:1rem;">🃏</div>
+        <p>No cards yet. Upload your first card using the form on the left.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<script>
+// Image preview
+const imgInput = document.getElementById('imgInput');
+const preview  = document.getElementById('dropPreview');
+const dropZone = document.getElementById('dropZone');
+
+imgInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (file) showPreview(file);
+});
+
+['dragover','dragenter'].forEach(ev => dropZone.addEventListener(ev, e => {
+  e.preventDefault(); dropZone.classList.add('drag-over');
+}));
+['dragleave','drop'].forEach(ev => dropZone.addEventListener(ev, () => dropZone.classList.remove('drag-over')));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  const file = e.dataTransfer.files[0];
+  if (file) { showPreview(file); const dt = new DataTransfer(); dt.items.add(file); imgInput.files = dt.files; }
+});
+
+function showPreview(file) {
+  const reader = new FileReader();
+  reader.onload = e => { preview.src = e.target.result; preview.style.display = 'block'; };
+  reader.readAsDataURL(file);
+}
+
+// Live search + filter
+const search = document.getElementById('collSearch');
+const filter = document.getElementById('collFilter');
+const status = document.getElementById('collStatus');
+
+function filterCards() {
+  const q  = search.value.toLowerCase();
+  const p  = filter.value;
+  const st = status.value;
+  document.querySelectorAll('.coll-card').forEach(card => {
+    const nm = card.dataset.name;
+    const pa = card.dataset.palette;
+    const s  = card.dataset.status;
+    const show = (!q || nm.includes(q)) && (!p || pa === p) && (!st || s.includes(st));
+    card.style.display = show ? '' : 'none';
+  });
+}
+search.addEventListener('input', filterCards);
+filter.addEventListener('change', filterCards);
+status.addEventListener('change', filterCards);
+</script>
+{% endblock %}

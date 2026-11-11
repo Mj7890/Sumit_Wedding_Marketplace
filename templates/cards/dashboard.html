@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — Arts By Graphic{% endblock %}
+
+{% block extra_css %}
+<style>
+.dash-page { padding: 3rem; background: #f8f4ef; min-height: 100vh; }
+
+/* ── HEADER ── */
+.dash-header {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem;
+}
+.dash-welcome { font-family:'Cormorant Garamond',serif; font-size:2.4rem; font-weight:300; color:#1a0a0a; }
+.dash-welcome span { color: var(--gold); font-style: italic; }
+.dash-date { font-size:0.75rem; letter-spacing:0.15em; text-transform:uppercase; color:rgba(0,0,0,0.35); }
+
+/* ── STAT CARDS ── */
+.stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1.2rem; margin-bottom:2.5rem; }
+.stat-card {
+  background: white; border-radius:12px; padding:1.5rem 1.8rem;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+  display: flex; align-items: center; gap:1.2rem;
+  position: relative; overflow: hidden;
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+.stat-card:hover { transform:translateY(-3px); box-shadow:0 8px 28px rgba(0,0,0,0.12); }
+.stat-card::before {
+  content:''; position:absolute; top:0; left:0; width:4px; height:100%;
+}
+.stat-card.gold::before   { background:linear-gradient(to bottom,#c8962e,#f0d080); }
+.stat-card.blue::before   { background:linear-gradient(to bottom,#0ea5e9,#38bdf8); }
+.stat-card.rose::before   { background:linear-gradient(to bottom,#c0507a,#f48fb1); }
+.stat-card.green::before  { background:linear-gradient(to bottom,#22c55e,#86efac); }
+.stat-icon {
+  width:52px; height:52px; border-radius:12px; display:flex;
+  align-items:center; justify-content:center; font-size:1.5rem; flex-shrink:0;
+}
+.stat-card.gold  .stat-icon { background:#fef3cd; }
+.stat-card.blue  .stat-icon { background:#e0f2fe; }
+.stat-card.rose  .stat-icon { background:#fce4ec; }
+.stat-card.green .stat-icon { background:#dcfce7; }
+.stat-num   { font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:600; color:#1a0a0a; line-height:1; }
+.stat-lbl   { font-size:0.7rem; letter-spacing:0.12em; text-transform:uppercase; color:rgba(0,0,0,0.4); margin-top:0.2rem; }
+
+/* ── TWO COLUMN LAYOUT ── */
+.dash-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
+.dash-grid-3 { display:grid; grid-template-columns:2fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
+
+/* ── PANEL ── */
+.panel {
+  background:white; border-radius:12px;
+  box-shadow:0 2px 16px rgba(0,0,0,0.07); overflow:hidden;
+}
+.panel-head {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:1.2rem 1.5rem; border-bottom:1px solid rgba(0,0,0,0.06);
+}
+.panel-title { font-family:'Cormorant Garamond',serif; font-size:1.2rem; font-weight:600; color:#1a0a0a; }
+.panel-link  { font-size:0.68rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--gold); text-decoration:none; }
+.panel-link:hover { text-decoration:underline; }
+.panel-body  { padding:1rem 1.5rem; }
+.panel-empty { text-align:center; padding:2.5rem 1rem; opacity:0.4; font-style:italic; font-size:0.9rem; }
+
+/* ── ORDER ROWS ── */
+.order-row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:0.85rem 0; border-bottom:1px solid rgba(0,0,0,0.05);
+}
+.order-row:last-child { border-bottom:none; }
+.order-row-id   { font-family:'Cormorant Garamond',serif; font-size:1rem; font-weight:600; color:#1a0a0a; }
+.order-row-date { font-size:0.7rem; color:rgba(0,0,0,0.4); margin-top:0.1rem; }
+.order-row-amt  { font-size:0.95rem; color:var(--gold); font-weight:500; }
+.status-pill {
+  font-size:0.6rem; letter-spacing:0.1em; text-transform:uppercase;
+  padding:0.22rem 0.7rem; border-radius:20px; display:inline-block; margin-top:0.2rem;
+}
+.sp-pending   { background:#fff3cd; color:#856404; }
+.sp-confirmed { background:#d4edda; color:#155724; }
+.sp-processing{ background:#d1ecf1; color:#0c5460; }
+.sp-delivered { background:#e2e3e5; color:#383d41; }
+.sp-cancelled { background:#f8d7da; color:#721c24; }
+
+/* ── PRINT ORDER CARDS ── */
+.print-mini-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; }
+.print-mini {
+  border-radius:8px; padding:1rem; position:relative; overflow:hidden;
+  border:1px solid rgba(0,0,0,0.07);
+}
+.print-mini.bride { background:linear-gradient(135deg,#fce4ec,#f8bbd9); }
+.print-mini.groom { background:linear-gradient(135deg,#fef3cd,#fde68a); }
+.print-mini-type  { font-size:0.6rem; letter-spacing:0.15em; text-transform:uppercase; opacity:0.6; margin-bottom:0.3rem; }
+.print-mini-names { font-family:'Noto Serif Devanagari',serif; font-size:0.95rem; font-weight:600; color:#1a0a0a; }
+.print-mini-date  { font-size:0.68rem; color:rgba(0,0,0,0.45); margin-top:0.2rem; }
+
+/* ── CUSTOMIZATION CARDS ── */
+.custom-mini-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; }
+.custom-mini {
+  border-radius:8px; padding:1rem; border:1px solid rgba(0,0,0,0.07); background:#fafaf8;
+  display:flex; gap:0.8rem; align-items:center;
+}
+.custom-mini-dot  { width:36px; height:36px; border-radius:8px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:1.2rem; }
+.custom-mini-name { font-size:0.88rem; font-weight:500; color:#1a0a0a; }
+.custom-mini-info { font-size:0.68rem; color:rgba(0,0,0,0.4); margin-top:0.15rem; }
+
+/* ── CART PANEL ── */
+.cart-mini-row { display:flex; justify-content:space-between; align-items:center; padding:0.7rem 0; border-bottom:1px solid rgba(0,0,0,0.05); }
+.cart-mini-row:last-child { border-bottom:none; }
+.cart-mini-name { font-size:0.88rem; font-weight:500; color:#1a0a0a; }
+.cart-mini-price{ font-size:0.88rem; color:var(--gold); }
+.cart-checkout-btn {
+  display:block; width:100%; text-align:center;
+  padding:0.8rem; background:linear-gradient(135deg,#c8962e,#7a5010);
+  color:white; border-radius:6px; text-decoration:none;
+  font-size:0.75rem; letter-spacing:0.1em; text-transform:uppercase;
+  margin-top:1rem; transition:all 0.25s;
+}
+.cart-checkout-btn:hover { transform:translateY(-1px); box-shadow:0 4px 14px rgba(200,150,46,0.4); }
+
+/* ── QUICK ACTIONS ── */
+.quick-actions { display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; }
+.qa-btn {
+  display:flex; flex-direction:column; align-items:center; gap:0.5rem;
+  padding:1.2rem 0.8rem; border-radius:10px; text-decoration:none;
+  border:1.5px solid rgba(0,0,0,0.08); background:white;
+  transition:all 0.25s; text-align:center;
+}
+.qa-btn:hover { border-color:var(--gold); box-shadow:0 4px 14px rgba(200,150,46,0.18); transform:translateY(-2px); }
+.qa-icon { font-size:1.6rem; }
+.qa-label { font-size:0.68rem; letter-spacing:0.1em; text-transform:uppercase; color:rgba(0,0,0,0.5); font-weight:500; }
+
+/* admin badge */
+.admin-badge {
+  display:inline-flex; align-items:center; gap:0.4rem;
+  background:linear-gradient(135deg,#c8962e,#7a5010);
+  color:white; padding:0.3rem 0.8rem; border-radius:20px;
+  font-size:0.65rem; letter-spacing:0.1em; text-transform:uppercase;
+  text-decoration:none; margin-left:0.8rem;
+}
+
+@media(max-width:1000px){
+  .stat-grid   { grid-template-columns:repeat(2,1fr); }
+  .dash-grid   { grid-template-columns:1fr; }
+  .dash-grid-3 { grid-template-columns:1fr; }
+  .dash-page   { padding:1.5rem; }
+}
+@media(max-width:600px){
+  .stat-grid { grid-template-columns:1fr 1fr; }
+  .print-mini-grid,.custom-mini-grid,.quick-actions { grid-template-columns:1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dash-page">
+
+  <!-- Header -->
+  <div class="dash-header">
+    <div>
+      <div class="dash-welcome">
+        Welcome back, <span>{{ user.username }}</span>
+        {% if user.is_staff %}<a href="{% url 'admin_upload_collection' %}" class="admin-badge">⚙ Admin Panel</a>{% endif %}
+      </div>
+      <div class="dash-date">{{ "now"|date:"l, F j, Y" }} · Your personal dashboard</div>
+    </div>
+    <a href="{% url 'marketplace' %}" class="btn btn-dark">+ Browse Cards</a>
+  </div>
+
+  <!-- Stat Cards -->
+  <div class="stat-grid">
+    <div class="stat-card gold">
+      <div class="stat-icon">🛍</div>
+      <div><div class="stat-num">{{ total_orders }}</div><div class="stat-lbl">Total Orders</div></div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-icon">💰</div>
+      <div><div class="stat-num">₹{{ total_spent|floatformat:0 }}</div><div class="stat-lbl">Total Spent</div></div>
+    </div>
+    <div class="stat-card rose">
+      <div class="stat-icon">🖨</div>
+      <div><div class="stat-num">{{ print_orders }}</div><div class="stat-lbl">Print Orders</div></div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-icon">🎨</div>
+      <div><div class="stat-num">{{ customizations }}</div><div class="stat-lbl">Customizations</div></div>
+    </div>
+  </div>
+
+  <!-- Row 1: Recent Orders + Cart -->
+  <div class="dash-grid-3">
+
+    <!-- Recent Orders -->
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">Recent Orders</span>
+        <a href="{% url 'orders' %}" class="panel-link">View All →</a>
+      </div>
+      <div class="panel-body">
+        {% if recent_orders %}
+          {% for order in recent_orders %}
+          <div class="order-row">
+            <div>
+              <div class="order-row-id">Order #{{ order.pk }}</div>
+              <div class="order-row-date">{{ order.created_at|date:"d M Y" }}</div>
+              <span class="status-pill sp-{{ order.status }}">{{ order.get_status_display }}</span>
+            </div>
+            <div class="order-row-amt">₹{{ order.total }}</div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="panel-empty">No orders yet. Start exploring!</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Cart -->
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">🛒 Cart</span>
+        <a href="{% url 'cart' %}" class="panel-link">View Cart →</a>
+      </div>
+      <div class="panel-body">
+        {% if cart_items %}
+          {% for item in cart_items %}
+          <div class="cart-mini-row">
+            <span class="cart-mini-name">{{ item.card.name }}</span>
+            <span class="cart-mini-price">₹{{ item.subtotal }}</span>
+          </div>
+          {% endfor %}
+          <a href="{% url 'checkout' %}" class="cart-checkout-btn">Checkout →</a>
+        {% else %}
+          <p class="panel-empty">Cart is empty</p>
+          <a href="{% url 'marketplace' %}" class="cart-checkout-btn">Browse Collection</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: Print Orders + Customizations -->
+  <div class="dash-grid">
+
+    <!-- Print Orders -->
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">🖨 Print Orders</span>
+        <a href="{% url 'my_printer_orders' %}" class="panel-link">View All →</a>
+      </div>
+      <div class="panel-body">
+        {% if recent_print %}
+          <div class="print-mini-grid">
+            {% for po in recent_print %}
+            <a href="{% url 'printer_card_success' po.pk %}" style="text-decoration:none;">
+              <div class="print-mini {{ po.card_type }}">
+                <div class="print-mini-type">{% if po.card_type == 'bride' %}👰 Bride Card{% else %}🤵 Groom Card{% endif %}</div>
+                <div class="print-mini-names">{{ po.primary_name }} & {{ po.secondary_name }}</div>
+                {% if po.shaadi_date %}<div class="print-mini-date">{{ po.shaadi_date }}</div>{% endif %}
+              </div>
+            </a>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="panel-empty">No print orders yet</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Customizations -->
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">🎨 My Designs</span>
+        <a href="{% url 'marketplace' %}" class="panel-link">New Design →</a>
+      </div>
+      <div class="panel-body">
+        {% if recent_custom %}
+          <div class="custom-mini-grid">
+            {% for c in recent_custom %}
+            <div class="custom-mini">
+              <div class="custom-mini-dot palette-{{ c.palette }}" style="background:var(--cream);">{{ c.ornament }}</div>
+              <div>
+                <div class="custom-mini-name">{{ c.bride_name }} & {{ c.groom_name }}</div>
+                <div class="custom-mini-info">{{ c.card.name }} · {{ c.wedding_date|truncatechars:20 }}</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="panel-empty">No customizations yet</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 3: Quick Actions -->
+  <div class="panel" style="max-width:500px;">
+    <div class="panel-head"><span class="panel-title">Quick Actions</span></div>
+    <div class="panel-body">
+      <div class="quick-actions">
+        <a href="{% url 'marketplace' %}" class="qa-btn"><span class="qa-icon">🃏</span><span class="qa-label">Browse Cards</span></a>
+        <a href="{% url 'printer_card_form' %}" class="qa-btn"><span class="qa-icon">🖨</span><span class="qa-label">Print Order</span></a>
+        <a href="{% url 'orders' %}" class="qa-btn"><span class="qa-icon">📦</span><span class="qa-label">My Orders</span></a>
+        <a href="{% url 'cart' %}" class="qa-btn"><span class="qa-icon">🛒</span><span class="qa-label">View Cart</span></a>
+        {% if user.is_staff %}
+        <a href="{% url 'admin_upload_collection' %}" class="qa-btn" style="border-color:var(--gold);"><span class="qa-icon">⬆</span><span class="qa-label">Upload Cards</span></a>
+        <a href="/admin/" class="qa-btn" style="border-color:var(--gold);"><span class="qa-icon">⚙</span><span class="qa-label">Django Admin</span></a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

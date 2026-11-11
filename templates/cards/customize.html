@@ -1,0 +1,689 @@
+{% extends 'base.html' %}
+{% block title %}Customize {{ card.name }} — Vows & Blooms{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@400;600;700&family=Noto+Sans+Devanagari:wght@300;400;500;600&display=swap');
+
+/* ── PAGE LAYOUT ── */
+.customize-page { padding: 4rem 3rem; background: var(--cream); }
+.page-eyebrow   { font-size:0.68rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold); margin-bottom:0.5rem; }
+.page-heading   { font-family:'Cormorant Garamond',serif; font-size:clamp(2rem,4vw,2.8rem); font-weight:300; color:var(--deep); margin-bottom:2rem; }
+.page-heading em { font-style:italic; color:var(--rose); }
+
+/* ── TAB SWITCHER ── */
+.tab-bar {
+  display: flex; gap: 0; margin-bottom: 2.5rem;
+  border: 1px solid rgba(59,42,42,0.12); border-radius: 3px;
+  overflow: hidden; width: fit-content;
+  box-shadow: 0 2px 12px var(--shadow);
+}
+.tab-btn {
+  padding: 0.85rem 2rem; border: none; cursor: pointer;
+  font-family: 'Jost', sans-serif; font-size: 0.78rem;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  transition: all 0.3s; background: white; color: var(--text);
+  opacity: 0.55; display: flex; align-items: center; gap: 0.5rem;
+  border-right: 1px solid rgba(59,42,42,0.1);
+}
+.tab-btn:last-child { border-right: none; }
+.tab-btn.active { background: var(--deep); color: white; opacity: 1; }
+.tab-btn .tab-icon { font-size: 1rem; }
+
+/* ── TWO-COLUMN LAYOUT ── */
+.customize-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 4rem; align-items: start;
+}
+.preview-col { position: sticky; top: 6rem; }
+
+/* ── DIGITAL CARD PREVIEW ── */
+.card-preview {
+  width: 100%; max-width: 380px; margin: 0 auto;
+  aspect-ratio: 3/4; border-radius: 4px;
+  box-shadow: 0 30px 70px rgba(59,42,42,0.2);
+  overflow: hidden;
+  transition: all 0.5s cubic-bezier(0.23,1,0.32,1);
+}
+.card-preview.landscape { aspect-ratio: 4/3; }
+.card-preview.square    { aspect-ratio: 1/1; }
+.card-visual-preview {
+  height: 100%; display: flex; flex-direction: column;
+  align-items: center; justify-content: space-between;
+  padding: 2.5rem 2rem; border-radius: 4px;
+}
+.prev-ornament { font-size: 3rem; opacity: 0.7; transition: all 0.3s; }
+.prev-body     { text-align: center; }
+.prev-names    { font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:300; font-style:italic; margin-bottom:0.5rem; transition:font-family 0.3s; }
+.prev-amp      { opacity:0.65; display:block; font-size:1.4rem; }
+.prev-divider  { width:50px; height:1px; background:rgba(255,255,255,0.4); margin:0.8rem auto; }
+.prev-date     { font-size:0.68rem; letter-spacing:0.2em; text-transform:uppercase; opacity:0.7; }
+.prev-venue    { font-size:0.72rem; opacity:0.55; margin-top:0.4rem; }
+.preview-hint  { text-align:center; font-size:0.65rem; letter-spacing:0.15em; text-transform:uppercase; opacity:0.35; margin-top:1rem; }
+
+/* ── PRINTER CARD MINI PREVIEW ── */
+.printer-preview-wrap { width:100%; max-width:380px; margin:0 auto; }
+.printer-preview-outer {
+  padding: 3px; border-radius: 3px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+  transition: background 0.4s;
+}
+.printer-preview-outer.bride-outer { background: linear-gradient(145deg,#c0507a,#f8c0d0,#c0507a); }
+.printer-preview-outer.groom-outer { background: linear-gradient(145deg,#c8962e,#f0d080,#c8962e); }
+.printer-preview-paper {
+  background: #fffdf7; border-radius: 2px; padding: 1rem 1.2rem;
+  font-family: 'Noto Sans Devanagari', sans-serif; font-size: 0.75rem;
+  position: relative; overflow: hidden;
+}
+.printer-preview-paper::before, .printer-preview-paper::after {
+  content: '卐'; position: absolute; font-size: 1.2rem; color: #c8962e; opacity: 0.15;
+}
+.printer-preview-paper::before { top:5px; left:8px; }
+.printer-preview-paper::after  { top:5px; right:8px; }
+.pp-header { border-bottom: 1.5px solid #c8962e; padding-bottom: 0.5rem; margin-bottom: 0.6rem; text-align: center; }
+.pp-bless  { font-size: 0.62rem; color: #8b1a1a; font-weight: 600; display: flex; justify-content: space-between; margin-bottom: 0.2rem; }
+.pp-shop   { font-family:'Noto Serif Devanagari',serif; font-size:1rem; font-weight:700; color:#1a1008; }
+.pp-badge  { display:inline-block; font-size:0.55rem; letter-spacing:0.12em; padding:0.15rem 0.7rem; border-radius:20px; margin-top:0.2rem; }
+.pp-badge.bride { background:#f9dde8; color:#7a1a30; border:1px solid #d08090; }
+.pp-badge.groom { background:#fef3d8; color:#7a4a00; border:1px solid #d0a840; }
+.pp-row  { display:flex; align-items:baseline; border-bottom:1px dotted #bbb; margin-bottom:0.35rem; padding-bottom:0.05rem; gap:0.3rem; }
+.pp-lbl  { font-family:'Noto Serif Devanagari',serif; font-size:0.72rem; font-weight:600; color:#1a1008; white-space:nowrap; flex-shrink:0; }
+.pp-val  { font-size:0.72rem; color:#1a1008; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 0.2rem; }
+.pp-val.empty { color:#ccc; font-style:italic; font-size:0.65rem; }
+.pp-footer { background:#1a1008; padding:0.35rem 0.6rem; margin: 0.6rem -1.2rem -1rem; }
+.pp-footer p { font-size:0.55rem; color:rgba(255,255,255,0.7); line-height:1.4; }
+
+/* ── CONTROLS PANEL ── */
+.controls-panel h2 { font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:300; margin-bottom:0.3rem; color:var(--deep); }
+.controls-sub { font-size:0.83rem; opacity:0.6; margin-bottom:2rem; }
+.ctrl-group   { margin-bottom:1.8rem; }
+
+/* Palette swatches */
+.swatch-row { display:flex; gap:0.7rem; flex-wrap:wrap; }
+.swatch { width:38px; height:38px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition:all 0.2s; }
+.swatch.active { border-color:var(--deep); transform:scale(1.2); }
+.swatch:hover  { transform:scale(1.1); }
+
+/* Ornament buttons */
+.ornament-row { display:flex; gap:0.5rem; flex-wrap:wrap; }
+.orn-btn { width:46px; height:46px; border:1px solid rgba(59,42,42,0.15); background:white; font-size:1.3rem; cursor:pointer; border-radius:2px; transition:all 0.2s; display:flex; align-items:center; justify-content:center; }
+.orn-btn.active { background:var(--ivory); border-color:var(--gold); }
+.orn-btn:hover  { border-color:var(--gold); }
+
+/* Font / Style buttons */
+.font-row, .style-row { display:flex; gap:0.5rem; flex-wrap:wrap; }
+.font-btn  { padding:0.5rem 1rem; border:1px solid rgba(59,42,42,0.15); background:white; cursor:pointer; font-size:0.8rem; border-radius:2px; transition:all 0.2s; font-family:'Jost',sans-serif; }
+.font-btn.active { background:var(--deep); color:white; border-color:var(--deep); }
+.style-btn { padding:0.55rem 1.1rem; border:1px solid rgba(59,42,42,0.15); background:white; cursor:pointer; font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase; border-radius:2px; transition:all 0.2s; font-family:'Jost',sans-serif; }
+.style-btn.active { background:var(--rose); color:white; border-color:var(--rose); }
+
+/* Submit button */
+.submit-btn { width:100%; padding:1.1rem; background:var(--deep); color:var(--cream); border:none; font-family:'Jost',sans-serif; font-size:0.8rem; letter-spacing:0.15em; text-transform:uppercase; cursor:pointer; margin-top:1.5rem; transition:background 0.25s; display:flex; align-items:center; justify-content:center; gap:1rem; }
+.submit-btn:hover { background:var(--gold); }
+.price-pill { background:rgba(255,255,255,0.15); padding:0.2rem 0.8rem; border-radius:20px; font-size:1rem; }
+
+/* ── PRINTER CARD FORM STYLES ── */
+.printer-type-toggle { display:flex; gap:0.5rem; margin-bottom:1.8rem; }
+.ptype-btn { flex:1; padding:0.75rem 1rem; border:1px solid rgba(59,42,42,0.15); background:white; cursor:pointer; border-radius:3px; font-family:'Noto Serif Devanagari',serif; font-size:0.9rem; font-weight:600; transition:all 0.3s; display:flex; align-items:center; justify-content:center; gap:0.4rem; }
+.ptype-btn.bride-active { background:linear-gradient(135deg,#c0507a,#8b1a2a); color:white; border-color:transparent; box-shadow:0 4px 15px rgba(180,60,100,0.35); }
+.ptype-btn.groom-active { background:linear-gradient(135deg,#c8962e,#8b5a0a); color:white; border-color:transparent; box-shadow:0 4px 15px rgba(200,150,46,0.35); }
+
+/* Printer form field rows */
+.pf-group  { margin-bottom:1.5rem; }
+.pf-label  { font-size:0.62rem; letter-spacing:0.2em; text-transform:uppercase; color:#8b1a1a; display:block; margin-bottom:0.5rem; font-family:'Noto Sans Devanagari',sans-serif; }
+.pf-row    { display:flex; gap:0.5rem; flex-wrap:wrap; }
+.pf-row .form-input { flex:1; min-width:120px; }
+.pf-inline { display:flex; align-items:center; gap:0.3rem; flex-wrap:wrap; margin-bottom:0.5rem; }
+.pf-sep    { font-family:'Noto Serif Devanagari',serif; font-size:0.8rem; font-weight:600; color:var(--text); white-space:nowrap; padding:0 0.2rem; opacity:0.7; }
+.pf-inline .form-input { margin-bottom:0; }
+.pf-inline .form-input.sm { width:90px; flex:none; }
+.pf-inline .form-input.md { width:130px; flex:none; }
+.pf-inline .form-input.xl { flex:1; min-width:100px; }
+
+/* Bride/groom variant visibility */
+.bride-fields, .groom-fields { display:none; }
+.show-bride .bride-fields    { display:block; }
+.show-groom .groom-fields    { display:block; }
+
+/* Signature row */
+.sig-row { display:grid; grid-template-columns:1fr 1px 1fr; gap:0; margin:0.8rem 0 1rem; }
+.sig-col  { padding:0 0.5rem; }
+.sig-col-lbl { font-size:0.7rem; letter-spacing:0.15em; text-transform:uppercase; color:#8b1a1a; margin-bottom:0.5rem; font-family:'Noto Sans Devanagari',sans-serif; }
+.sig-divider-line { background:rgba(59,42,42,0.12); }
+
+/* Submit printer */
+.printer-submit { width:100%; padding:1.1rem; border:none; font-family:'Noto Serif Devanagari',serif; font-size:1rem; font-weight:600; cursor:pointer; margin-top:1.2rem; border-radius:2px; transition:all 0.25s; display:flex; align-items:center; justify-content:center; gap:1rem; }
+.printer-submit.bride-submit { background:linear-gradient(135deg,#c0507a,#8b1a2a); color:white; box-shadow:0 4px 15px rgba(180,60,100,0.4); }
+.printer-submit.groom-submit { background:linear-gradient(135deg,#c8962e,#8b5a0a); color:white; box-shadow:0 4px 15px rgba(200,150,46,0.4); }
+.printer-submit:hover { transform:translateY(-1px); filter:brightness(1.1); }
+
+/* Tab content visibility */
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+
+@media(max-width:900px) {
+  .customize-grid { grid-template-columns:1fr; gap:2rem; }
+  .preview-col { position:static; }
+  .customize-page { padding:3rem 1.5rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="customize-page">
+  <p class="page-eyebrow">✦ Card Studio</p>
+  <h1 class="page-heading">Design your <em>perfect</em> invitation</h1>
+
+  <!-- TAB BAR -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab-digital" onclick="switchTab('digital')">
+      <span class="tab-icon">✨</span> Digital Card
+    </button>
+    <button class="tab-btn" id="tab-printer" onclick="switchTab('printer')">
+      <span class="tab-icon">🖨</span> Printer Card Form
+    </button>
+  </div>
+
+  <div class="customize-grid">
+
+    <!-- ══════════════════════════════
+         LEFT: PREVIEW COLUMN
+         (changes based on active tab)
+    ══════════════════════════════ -->
+    <div class="preview-col">
+
+      <!-- Digital preview -->
+      <div id="preview-digital" class="tab-content active">
+        <div class="card-preview" id="cardPreview">
+          <div class="card-visual-preview palette-{{ card.palette }}" id="previewBg">
+            <div class="prev-ornament" id="prevOrn">{{ card.ornament }}</div>
+            <div class="prev-body">
+              <div class="prev-names" id="prevNames">
+                <span id="pBride">Bride</span>
+                <span class="prev-amp">&amp;</span>
+                <span id="pGroom">Groom</span>
+              </div>
+              <div class="prev-divider"></div>
+              <div class="prev-date" id="prevDate">Your Wedding Date</div>
+              <div class="prev-venue" id="prevVenue"></div>
+            </div>
+          </div>
+        </div>
+        <p class="preview-hint">Live Preview — updates as you type</p>
+      </div>
+
+      <!-- Printer card preview -->
+      <div id="preview-printer" class="tab-content">
+        <div class="printer-preview-wrap">
+          <div class="printer-preview-outer bride-outer" id="ppOuter">
+            <div class="printer-preview-paper">
+              <div class="pp-header">
+                <div class="pp-bless">
+                  <span>जय श्री राम ।। जय माता दी ।।</span>
+                  <span>9312666004</span>
+                </div>
+                <div class="pp-shop">धंनजय प्रिन्टर्स एण्ड कार्ड</div>
+                <span class="pp-badge bride" id="ppBadge">लड़की का कार्ड फॉर्म</span>
+              </div>
+              <div class="pp-row"><span class="pp-lbl" id="ppPrimaryLbl">लड़की का नाम</span><span class="pp-val empty" id="ppPrimary">नाम लिखें...</span></div>
+              <div class="pp-row"><span class="pp-lbl">पिता का नाम</span><span class="pp-val empty" id="ppFather">—</span></div>
+              <div class="pp-row"><span class="pp-lbl" id="ppSecLbl">लड़के का नाम</span><span class="pp-val empty" id="ppSecondary">—</span></div>
+              <div class="pp-row"><span class="pp-lbl">शादी की तारीख</span><span class="pp-val empty" id="ppDate">—</span></div>
+              <div class="pp-row"><span class="pp-lbl" id="ppVenueLbl">विवाह स्थल</span><span class="pp-val empty" id="ppVenue">—</span></div>
+              <div class="pp-row"><span class="pp-lbl">फोन नं.</span><span class="pp-val empty" id="ppPhone">—</span></div>
+              <div class="pp-footer">
+                <p>कृपया प्रूफ अच्छी तरह चेक कर लें</p>
+                <p>सोनिया नगर, गली न. 4, लोनी, गा.बाद</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="preview-hint">Live Preview — updates as you type</p>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════
+         RIGHT: CONTROLS COLUMN
+    ══════════════════════════════ -->
+    <div class="controls-col">
+
+      <!-- ─────────────────────────
+           TAB 1: DIGITAL CARD FORM
+      ───────────────────────────── -->
+      <div id="form-digital" class="tab-content active">
+        <div class="controls-panel">
+          <h2>Personalize your card</h2>
+          <p class="controls-sub">Every detail crafted for your perfect day.</p>
+
+          <form method="post" id="customForm">
+            {% csrf_token %}
+
+            <div class="ctrl-group">
+              <label class="form-label">Palette</label>
+              <div class="swatch-row">
+                <div class="swatch {% if card.palette == 'floral' %}active{% endif %}"    style="background:linear-gradient(135deg,#e8c4a8,#c47c6a)" data-palette="floral"></div>
+                <div class="swatch {% if card.palette == 'botanical' %}active{% endif %}" style="background:linear-gradient(135deg,#d4e8d4,#5a7a5a)" data-palette="botanical"></div>
+                <div class="swatch {% if card.palette == 'gold' %}active{% endif %}"      style="background:linear-gradient(135deg,#1a1000,#b8935a)" data-palette="gold"></div>
+                <div class="swatch {% if card.palette == 'minimal' %}active{% endif %}"   style="background:linear-gradient(135deg,#f0ece8,#a09088)" data-palette="minimal"></div>
+                <div class="swatch {% if card.palette == 'classic' %}active{% endif %}"   style="background:linear-gradient(135deg,#1a1a2e,#9a70c0)" data-palette="classic"></div>
+                <div class="swatch {% if card.palette == 'rustic' %}active{% endif %}"    style="background:linear-gradient(135deg,#2a1a0a,#a87850)" data-palette="rustic"></div>
+              </div>
+              {{ form.palette }}
+            </div>
+
+            <div class="ctrl-group">
+              <label class="form-label">Bride's Name</label>
+              {{ form.bride_name }}
+              {% for e in form.bride_name.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+              <label class="form-label">Groom's Name</label>
+              {{ form.groom_name }}
+              {% for e in form.groom_name.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+            </div>
+
+            <div class="ctrl-group">
+              <label class="form-label">Wedding Date</label>
+              {{ form.wedding_date }}
+              {% for e in form.wedding_date.errors %}<p class="form-error">{{ e }}</p>{% endfor %}
+              <label class="form-label">Venue</label>
+              {{ form.venue }}
+            </div>
+
+            <div class="ctrl-group">
+              <label class="form-label">Ornament</label>
+              <div class="ornament-row">
+                {% for orn in "❦✿⚜✦♾🌸" %}
+                <button type="button" class="orn-btn {% if card.ornament == orn %}active{% endif %}" data-orn="{{ orn }}">{{ orn }}</button>
+                {% endfor %}
+              </div>
+              {{ form.ornament }}
+            </div>
+
+            <div class="ctrl-group">
+              <label class="form-label">Typography</label>
+              <div class="font-row">
+                <button type="button" class="font-btn active" data-font="cormorant" style="font-family:'Cormorant Garamond',serif">Cormorant</button>
+                <button type="button" class="font-btn" data-font="jost"      style="font-family:'Jost',sans-serif">Jost</button>
+                <button type="button" class="font-btn" data-font="georgia"   style="font-family:Georgia,serif">Georgia</button>
+              </div>
+              {{ form.font_choice }}
+            </div>
+
+            <div class="ctrl-group">
+              <label class="form-label">Card Shape</label>
+              <div class="style-row">
+                <button type="button" class="style-btn active" data-style="portrait">Portrait</button>
+                <button type="button" class="style-btn" data-style="landscape">Landscape</button>
+                <button type="button" class="style-btn" data-style="square">Square</button>
+              </div>
+              {{ form.card_style }}
+            </div>
+
+            <!-- Quantity — Min 100 -->
+            <div class="ctrl-group" style="margin-bottom:1rem;">
+              <label class="form-label">
+                Quantity
+                <span style="background:#fce4ec;color:#c62828;font-size:0.65rem;
+                  padding:0.15rem 0.55rem;border-radius:20px;margin-left:0.4rem;
+                  letter-spacing:0.08em;">Min. 100</span>
+              </label>
+
+              <!-- Stepper -->
+              <div style="display:flex;align-items:stretch;border:1.5px solid rgba(59,42,42,0.18);
+                          border-radius:6px;overflow:hidden;background:white;">
+                <button type="button" onclick="changeQty(-50)"
+                  style="width:44px;background:#f8f4ef;border:none;border-right:1px solid rgba(59,42,42,0.1);
+                         font-size:1.2rem;cursor:pointer;transition:background 0.2s;"
+                  onmouseover="this.style.background='#f0ebe4'"
+                  onmouseout="this.style.background='#f8f4ef'">−</button>
+                <input type="number" name="quantity" id="qtyInput"
+                       value="100" min="100" step="50"
+                       style="flex:1;text-align:center;border:none;outline:none;
+                              font-family:'Jost',sans-serif;font-size:1.05rem;
+                              font-weight:600;color:var(--deep);padding:0.5rem 0;"
+                       oninput="onQtyInput(this)">
+                <button type="button" onclick="changeQty(50)"
+                  style="width:44px;background:#f8f4ef;border:none;border-left:1px solid rgba(59,42,42,0.1);
+                         font-size:1.2rem;cursor:pointer;transition:background 0.2s;"
+                  onmouseover="this.style.background='#f0ebe4'"
+                  onmouseout="this.style.background='#f8f4ef'">+</button>
+              </div>
+
+              <!-- Quick pick buttons -->
+              <div style="display:flex;gap:0.4rem;margin-top:0.6rem;flex-wrap:wrap;">
+                {% for qty in preset_qtys %}
+                <button type="button" onclick="setQty({{ qty }})"
+                  style="padding:0.3rem 0.7rem;border:1px solid rgba(59,42,42,0.12);
+                         border-radius:20px;background:white;cursor:pointer;
+                         font-size:0.68rem;font-family:'Jost',sans-serif;
+                         transition:all 0.2s;"
+                  onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'"
+                  onmouseout="this.style.borderColor='rgba(59,42,42,0.12)';this.style.color=''">
+                  {{ qty }}
+                </button>
+              {% endfor %}
+              </div>
+
+              <!-- Live total -->
+              <div id="qtyNote" style="margin-top:0.7rem;padding:0.65rem 1rem;
+                background:var(--ivory);border-radius:6px;border:1px solid rgba(200,150,46,0.2);">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:0.72rem;opacity:0.6;">Price per card</span>
+                  <span style="font-size:0.85rem;font-weight:500;">₹{{ card.price }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.3rem;">
+                  <span style="font-size:0.72rem;opacity:0.6;">Quantity</span>
+                  <span id="qtyDisplay" style="font-size:0.85rem;font-weight:500;">100</span>
+                </div>
+                <div style="border-top:1px dashed rgba(59,42,42,0.1);margin:0.4rem 0;"></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:0.78rem;font-weight:600;">Total Amount</span>
+                  <span id="totalPrice" style="font-size:1.1rem;font-weight:700;color:var(--gold);">
+                    ₹{{ card.price|stringformat:"s" }}00
+                  </span>
+                </div>
+              </div>
+
+              <div id="qtyError" style="display:none;color:#c62828;font-size:0.72rem;margin-top:0.3rem;
+                padding:0.4rem 0.7rem;background:#fce4ec;border-radius:4px;">
+                ⚠ Minimum order is 100 cards
+              </div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="addCartBtn">
+              <span>Add to Cart</span>
+              <span class="price-pill" id="submitTotal">₹{{ card.price }} × 100</span>
+            </button>
+          </form>
+        </div>
+      </div><!-- /form-digital -->
+
+
+      <!-- ─────────────────────────
+           TAB 2: PRINTER CARD FORM
+      ───────────────────────────── -->
+      <div id="form-printer" class="tab-content">
+        <div class="controls-panel">
+          <h2 style="font-family:'Noto Serif Devanagari',serif;">धंनजय प्रिन्टर्स</h2>
+          <p class="controls-sub">कार्ड का प्रकार चुनें और विवरण भरें — Select type and fill details</p>
+
+          <!-- Bride / Groom toggle -->
+          <div class="printer-type-toggle">
+            <button type="button" class="ptype-btn bride-active" id="ptypeBride" onclick="switchPrinterType('bride')">
+              👰 लड़की (Bride)
+            </button>
+            <button type="button" class="ptype-btn" id="ptypeGroom" onclick="switchPrinterType('groom')">
+              🤵 लड़का (Groom)
+            </button>
+          </div>
+
+          <form method="post" action="{% url 'printer_card_form' %}" id="printerForm">
+            {% csrf_token %}
+            <input type="hidden" name="card_type" id="pCardType" value="bride">
+
+            <!-- Primary person -->
+            <div class="pf-group show-bride" id="pFormBody">
+
+              <label class="pf-label" id="pPrimaryNameLbl">लड़की का नाम / Bride's Name *</label>
+              <input type="text" name="primary_name" class="form-input" placeholder="पूरा नाम" required
+                     oninput="updatePrinterPreview()">
+
+              <label class="pf-label">पिता का नाम / Father's Name *</label>
+              <input type="text" name="primary_father_name" class="form-input" placeholder="" required
+                     oninput="updatePrinterPreview()">
+
+              <label class="pf-label">दादा का नाम / Grandfather's Name</label>
+              <input type="text" name="primary_dada_name" class="form-input" placeholder="">
+
+              <label class="pf-label" id="pPrimaryAddrLbl">लड़की का पता / Bride's Address *</label>
+              <input type="text" name="primary_address" class="form-input" placeholder="पूरा पता" required>
+
+              <hr style="border:none;border-top:1px solid rgba(59,42,42,0.1);margin:1.2rem 0;">
+
+              <label class="pf-label" id="pSecNameLbl">लड़के का नाम / Groom's Name *</label>
+              <input type="text" name="secondary_name" class="form-input" placeholder="पूरा नाम" required
+                     oninput="updatePrinterPreview()">
+
+              <label class="pf-label">पिता का नाम / Father's Name *</label>
+              <input type="text" name="secondary_father_name" class="form-input" placeholder="" required>
+
+              <label class="pf-label" id="pSecAddrLbl">लड़के का पता / Groom's Address</label>
+              <input type="text" name="secondary_address" class="form-input" placeholder="पूरा पता">
+
+              <hr style="border:none;border-top:1px solid rgba(59,42,42,0.1);margin:1.2rem 0;">
+
+              <!-- Sagaai -->
+              <label class="pf-label">सगाई की तारीख / Engagement</label>
+              <div class="pf-inline">
+                <input type="text" name="sagaai_date" class="form-input md" placeholder="तारीख">
+                <span class="pf-sep">समय</span>
+                <input type="text" name="sagaai_time" class="form-input sm" placeholder="बजे">
+                <span class="pf-sep">प्रीतिभोज</span>
+                <input type="text" name="sagaai_preetibhoj" class="form-input md" placeholder="">
+              </div>
+
+              <!-- Shaadi date (common) -->
+              <label class="pf-label">शादी की तारीख / Wedding Date</label>
+              <input type="text" name="shaadi_date" class="form-input" placeholder="दिनांक"
+                     oninput="updatePrinterPreview()">
+
+              <!-- Bride-specific wedding fields -->
+              <div class="bride-fields">
+                <div class="pf-inline" style="margin-top:0.5rem;">
+                  <span class="pf-sep">बारात स्वागत</span>
+                  <input type="text" name="barat_swagat" class="form-input sm" placeholder="समय">
+                  <span class="pf-sep">प्रीतिभोज</span>
+                  <input type="text" name="shaadi_preetibhoj" class="form-input md" placeholder="">
+                </div>
+                <label class="pf-label" style="margin-top:0.8rem;">विवाह स्थल / Venue</label>
+                <input type="text" name="vivah_sthal" class="form-input" placeholder="स्थल का नाम व पता"
+                       oninput="updatePrinterPreview()">
+              </div>
+
+              <!-- Groom-specific wedding fields -->
+              <div class="groom-fields">
+                <div class="pf-inline" style="margin-top:0.5rem;">
+                  <span class="pf-sep">घुड़चढ़ी का समय</span>
+                  <input type="text" name="ghudchadi_time" class="form-input sm" placeholder="">
+                  <span class="pf-sep">बारात प्रस्थान</span>
+                  <input type="text" name="barat_prasthan" class="form-input md" placeholder="">
+                </div>
+                <label class="pf-label" style="margin-top:0.8rem;">बारात कहाँ जाएगी</label>
+                <input type="text" name="barat_destination" class="form-input"
+                       placeholder="गंतव्य का पता" oninput="updatePrinterPreview()">
+                <label class="pf-label" style="margin-top:0.8rem;">रिशेप्शन / Reception</label>
+                <div class="pf-inline">
+                  <input type="text" name="reception_date" class="form-input md" placeholder="तारीख">
+                  <span class="pf-sep">प्रीतिभोज</span>
+                  <input type="text" name="reception_preetibhoj" class="form-input sm" placeholder="समय">
+                  <span class="pf-sep">स्थल</span>
+                  <input type="text" name="reception_sthal" class="form-input md" placeholder="">
+                </div>
+              </div>
+
+              <hr style="border:none;border-top:1px solid rgba(59,42,42,0.1);margin:1.2rem 0;">
+
+              <label class="pf-label">बाल आकांक्षा</label>
+              <input type="text" name="bal_aakanksha" class="form-input" placeholder="">
+
+              <label class="pf-label">अतिरिक्त जानकारी</label>
+              <input type="text" name="extra_info" class="form-input" placeholder="कोई अन्य विवरण...">
+
+              <!-- Signatures -->
+              <div class="sig-row">
+                <div class="sig-col">
+                  <div class="sig-col-lbl">दर्शनाभिलाषी :–</div>
+                  <input type="text" name="darshanaabhilashi" class="form-input" placeholder="">
+                </div>
+                <div class="sig-divider-line"></div>
+                <div class="sig-col">
+                  <div class="sig-col-lbl">विनीत :–</div>
+                  <input type="text" name="vineet" class="form-input" placeholder="">
+                </div>
+              </div>
+
+              <label class="pf-label">फोन नं. / Phone *</label>
+              <input type="tel" name="phone" class="form-input" placeholder="मोबाइल नंबर" required
+                     oninput="updatePrinterPreview()">
+
+            </div><!-- /pFormBody -->
+
+            <button type="submit" class="printer-submit bride-submit" id="printerSubmitBtn">
+              💾 ऑर्डर सबमिट करें
+            </button>
+          </form>
+        </div>
+      </div><!-- /form-printer -->
+
+    </div><!-- /controls-col -->
+  </div><!-- /customize-grid -->
+</div><!-- /customize-page -->
+
+<script>
+/* ══════════════════════════════════
+   TAB SWITCHING
+══════════════════════════════════ */
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('form-' + tab).classList.add('active');
+  document.getElementById('preview-' + tab).classList.add('active');
+}
+
+/* ══════════════════════════════════
+   DIGITAL CARD LOGIC
+══════════════════════════════════ */
+document.querySelectorAll('.swatch').forEach(s => {
+  s.addEventListener('click', () => {
+    document.querySelectorAll('.swatch').forEach(x => x.classList.remove('active'));
+    s.classList.add('active');
+    document.getElementById('previewBg').className = 'card-visual-preview palette-' + s.dataset.palette;
+    document.querySelector('[name="palette"]').value = s.dataset.palette;
+  });
+});
+
+['bride_name','groom_name','wedding_date','venue'].forEach(name => {
+  const el = document.querySelector(`#customForm [name="${name}"]`);
+  if (el) el.addEventListener('input', updateDigitalPreview);
+});
+
+function updateDigitalPreview() {
+  const bride = document.querySelector('#customForm [name="bride_name"]').value || 'Bride';
+  const groom = document.querySelector('#customForm [name="groom_name"]').value || 'Groom';
+  const date  = document.querySelector('#customForm [name="wedding_date"]').value;
+  const venue = document.querySelector('#customForm [name="venue"]').value;
+  document.getElementById('pBride').textContent   = bride;
+  document.getElementById('pGroom').textContent   = groom;
+  document.getElementById('prevDate').textContent = date  || 'Your Wedding Date';
+  document.getElementById('prevVenue').textContent= venue;
+}
+
+document.querySelectorAll('.orn-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.orn-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('prevOrn').textContent = btn.dataset.orn;
+    document.querySelector('[name="ornament"]').value = btn.dataset.orn;
+  });
+});
+
+const fontMap = {cormorant:"'Cormorant Garamond',serif", jost:"'Jost',sans-serif", georgia:"Georgia,serif"};
+document.querySelectorAll('.font-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.font-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('prevNames').style.fontFamily = fontMap[btn.dataset.font];
+    document.querySelector('[name="font_choice"]').value = btn.dataset.font;
+  });
+});
+
+document.querySelectorAll('.style-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const p = document.getElementById('cardPreview');
+    p.className = 'card-preview ' + (btn.dataset.style !== 'portrait' ? btn.dataset.style : '');
+    document.querySelector('[name="card_style"]').value = btn.dataset.style;
+  });
+});
+
+/* ══════════════════════════════════
+   PRINTER CARD TYPE SWITCH
+══════════════════════════════════ */
+let currentPrinterType = 'bride';
+
+function switchPrinterType(type) {
+  currentPrinterType = type;
+  const isBride = type === 'bride';
+
+  // Toggle buttons
+  document.getElementById('ptypeBride').className = 'ptype-btn' + (isBride ? ' bride-active' : '');
+  document.getElementById('ptypeGroom').className = 'ptype-btn' + (!isBride ? ' groom-active' : '');
+
+  // Hidden input
+  document.getElementById('pCardType').value = type;
+
+  // Labels
+  document.getElementById('pPrimaryNameLbl').textContent = isBride ? 'लड़की का नाम / Bride\'s Name *' : 'लड़के का नाम / Groom\'s Name *';
+  document.getElementById('pPrimaryAddrLbl').textContent = isBride ? 'लड़की का पता / Bride\'s Address *' : 'लड़के का पता / Groom\'s Address *';
+  document.getElementById('pSecNameLbl').textContent     = isBride ? 'लड़के का नाम / Groom\'s Name *' : 'लड़की का नाम / Bride\'s Name *';
+  document.getElementById('pSecAddrLbl').textContent     = isBride ? 'लड़के का पता / Groom\'s Address' : 'लड़की का पता / Bride\'s Address';
+
+  // Show/hide bride vs groom specific fields
+  document.querySelectorAll('.bride-fields').forEach(el => el.style.display = isBride ? 'block' : 'none');
+  document.querySelectorAll('.groom-fields').forEach(el => el.style.display = !isBride ? 'block' : 'none');
+
+  // Submit button colour
+  const btn = document.getElementById('printerSubmitBtn');
+  btn.className = 'printer-submit ' + (isBride ? 'bride-submit' : 'groom-submit');
+
+  // Preview panel
+  const ppOuter = document.getElementById('ppOuter');
+  const ppBadge = document.getElementById('ppBadge');
+  const ppPLbl  = document.getElementById('ppPrimaryLbl');
+  const ppSLbl  = document.getElementById('ppSecLbl');
+  const ppVLbl  = document.getElementById('ppVenueLbl');
+  ppOuter.className = 'printer-preview-outer ' + (isBride ? 'bride-outer' : 'groom-outer');
+  ppBadge.className = 'pp-badge ' + type;
+  ppBadge.textContent = isBride ? 'लड़की का कार्ड फॉर्म' : 'लड़के का कार्ड फॉर्म';
+  ppPLbl.textContent  = isBride ? 'लड़की का नाम' : 'लड़के का नाम';
+  ppSLbl.textContent  = isBride ? 'लड़के का नाम' : 'लड़की का नाम';
+  ppVLbl.textContent  = isBride ? 'विवाह स्थल' : 'बारात कहाँ';
+
+  updatePrinterPreview();
+}
+
+/* ══════════════════════════════════
+   PRINTER CARD LIVE PREVIEW
+══════════════════════════════════ */
+function updatePrinterPreview() {
+  const g = id => {
+    const el = document.querySelector(`#printerForm [name="${id}"]`);
+    return el ? el.value.trim() : '';
+  };
+  const set = (elId, val, fallback='—') => {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.textContent = val || fallback;
+    el.className   = 'pp-val' + (val ? '' : ' empty');
+  };
+
+  set('ppPrimary',   g('primary_name'));
+  set('ppFather',    g('primary_father_name'));
+  set('ppSecondary', g('secondary_name'));
+  set('ppDate',      g('shaadi_date'));
+  set('ppPhone',     g('phone'));
+
+  // Venue differs by type
+  const venue = currentPrinterType === 'bride'
+    ? g('vivah_sthal')
+    : (g('barat_destination') || g('reception_sthal'));
+  set('ppVenue', venue);
+}
+
+// Init: show correct fields on load
+switchPrinterType('bride');
+</script>
+{% endblock %}

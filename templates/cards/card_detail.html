@@ -1,0 +1,533 @@
+{% extends 'base.html' %}
+{% block title %}{{ card.name }} — Vows & Blooms{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@400;600;700&family=Noto+Sans+Devanagari:wght@300;400;500;600&display=swap');
+
+/* ── PAGE GRID ── */
+.detail-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 4rem; padding: 5rem 3rem; align-items: start;
+}
+.preview-col { position: sticky; top: 6rem; }
+
+/* ── CARD PREVIEW ── */
+.card-large {
+  width: 100%; max-width: 400px; margin: 0 auto;
+  aspect-ratio: 3/4; border-radius: 4px;
+  box-shadow: 0 30px 70px rgba(59,42,42,0.2);
+  overflow: hidden; transition: all 0.4s ease;
+}
+.card-large .card-visual {
+  height: 100%; border-radius: 4px;
+  justify-content: space-between; padding: 2.5rem 2rem;
+}
+.card-large-ornament { font-size: 3rem; opacity: 0.7; }
+.card-large-text     { text-align: center; }
+.card-large-title    { font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:300; font-style:italic; margin-bottom:0.5rem; transition: all 0.3s; }
+.card-large-sub      { font-size:0.7rem; letter-spacing:0.2em; text-transform:uppercase; opacity:0.6; }
+
+/* Mini printer preview (shown in print tab) */
+.printer-mini-wrap { display: none; width: 100%; max-width: 400px; margin: 0 auto; }
+.printer-mini-outer {
+  padding: 3px; border-radius: 3px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.18);
+  transition: background 0.4s;
+}
+.printer-mini-outer.b-outer { background: linear-gradient(145deg,#c0507a,#f8c0d0,#c0507a); }
+.printer-mini-outer.g-outer { background: linear-gradient(145deg,#c8962e,#f0d080,#c8962e); }
+.printer-mini-paper {
+  background: #fffdf7; border-radius: 2px; padding: 0.9rem 1.1rem;
+  font-family: 'Noto Sans Devanagari', sans-serif; position: relative; overflow: hidden;
+}
+.printer-mini-paper::before,.printer-mini-paper::after {
+  content:'卐'; position:absolute; font-size:1.1rem; color:#c8962e; opacity:0.15;
+}
+.printer-mini-paper::before { top:5px; left:7px; }
+.printer-mini-paper::after  { top:5px; right:7px; }
+.pm-head  { border-bottom:1.5px solid #c8962e; padding-bottom:0.45rem; margin-bottom:0.5rem; text-align:center; }
+.pm-bless { font-size:0.58rem; color:#8b1a1a; font-weight:600; display:flex; justify-content:space-between; margin-bottom:0.15rem; }
+.pm-shop  { font-family:'Noto Serif Devanagari',serif; font-size:0.92rem; font-weight:700; color:#1a1008; }
+.pm-badge { display:inline-block; font-size:0.52rem; letter-spacing:0.1em; padding:0.12rem 0.6rem; border-radius:20px; margin-top:0.15rem; }
+.pm-badge.b { background:#f9dde8; color:#7a1a30; border:1px solid #d08090; }
+.pm-badge.g { background:#fef3d8; color:#7a4a00; border:1px solid #d0a840; }
+.pm-row   { display:flex; align-items:baseline; border-bottom:1px dotted #bbb; margin-bottom:0.3rem; padding-bottom:0.04rem; gap:0.25rem; }
+.pm-lbl   { font-family:'Noto Serif Devanagari',serif; font-size:0.68rem; font-weight:600; color:#1a1008; white-space:nowrap; flex-shrink:0; }
+.pm-val   { font-size:0.68rem; color:#1a1008; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 0.2rem; }
+.pm-val.e { color:#ccc; font-style:italic; font-size:0.6rem; }
+.pm-foot  { background:#1a1008; padding:0.3rem 0.6rem; margin:0.5rem -1.1rem -0.9rem; }
+.pm-foot p { font-size:0.52rem; color:rgba(255,255,255,0.65); line-height:1.4; }
+
+/* ── SECTION TABS ── */
+.section-tabs {
+  display: flex; gap: 0; margin-bottom: 2rem;
+  border: 1px solid rgba(59,42,42,0.12); border-radius: 3px;
+  overflow: hidden; width: 100%;
+  box-shadow: 0 2px 10px var(--shadow);
+}
+.stab {
+  flex: 1; padding: 0.8rem 1rem; border: none; cursor: pointer;
+  font-family: 'Jost', sans-serif; font-size: 0.72rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  transition: all 0.3s; background: white; color: var(--text);
+  opacity: 0.5; display: flex; align-items: center; justify-content: center;
+  gap: 0.4rem; border-right: 1px solid rgba(59,42,42,0.08);
+}
+.stab:last-child { border-right: none; }
+.stab.active { background: var(--deep); color: white; opacity: 1; }
+.stab-icon { font-size: 0.9rem; }
+
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* ── INFO PANEL ── */
+.detail-info h1 { font-family:'Cormorant Garamond',serif; font-size:2.8rem; font-weight:300; margin-bottom:0.5rem; color:var(--deep); }
+.detail-price   { font-size:2rem; color:var(--gold); font-weight:300; margin:0.8rem 0; }
+.detail-desc    { font-size:0.9rem; line-height:1.8; opacity:0.7; margin-bottom:1.5rem; }
+.detail-meta    { display:grid; grid-template-columns:1fr 1fr; gap:1rem; padding:1.2rem 1.5rem; background:var(--ivory); border-radius:3px; margin-bottom:1.5rem; }
+.meta-item label { font-size:0.62rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); display:block; margin-bottom:0.25rem; }
+.meta-item span  { font-size:0.88rem; }
+.detail-actions  { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:2rem; }
+
+/* ── PRINT SECTION ── */
+.print-section { margin-top: 0.5rem; }
+
+/* Type toggle */
+.type-toggle { display:flex; gap:0.5rem; margin-bottom:1.5rem; }
+.ttype-btn {
+  flex: 1; padding: 0.75rem 0.8rem; border: 1px solid rgba(59,42,42,0.15);
+  background: white; cursor: pointer; border-radius: 3px;
+  font-family: 'Noto Serif Devanagari', sans-serif; font-size: 0.88rem; font-weight: 600;
+  transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+  color: var(--text); opacity: 0.6;
+}
+.ttype-btn.b-active { background:linear-gradient(135deg,#c0507a,#8b1a2a); color:white; border-color:transparent; box-shadow:0 4px 15px rgba(180,60,100,0.35); opacity:1; }
+.ttype-btn.g-active { background:linear-gradient(135deg,#c8962e,#8b5a0a); color:white; border-color:transparent; box-shadow:0 4px 15px rgba(200,150,46,0.35); opacity:1; }
+
+/* Printer form fields */
+.pf-section { margin-bottom:1.2rem; }
+.pf-lbl { font-size:0.62rem; letter-spacing:0.18em; text-transform:uppercase; color:#8b1a1a; display:block; margin-bottom:0.4rem; font-family:'Noto Sans Devanagari',sans-serif; }
+.pf-inline { display:flex; align-items:center; gap:0.3rem; flex-wrap:wrap; }
+.pf-sep { font-family:'Noto Serif Devanagari',serif; font-size:0.78rem; font-weight:600; color:var(--text); white-space:nowrap; opacity:0.7; }
+.pf-inline .form-input { margin-bottom:0; }
+.pf-inline .form-input.sm { width:80px; flex:none; }
+.pf-inline .form-input.md { width:120px; flex:none; }
+
+.pf-hr { border:none; border-top:1px solid rgba(59,42,42,0.09); margin:1rem 0; }
+
+/* Variant fields */
+.bride-only, .groom-only { display:none; }
+
+/* Signature */
+.sig-grid { display:grid; grid-template-columns:1fr 1px 1fr; margin:1rem 0; }
+.sig-c { padding:0 0.5rem; }
+.sig-c-lbl { font-size:0.6rem; letter-spacing:0.15em; text-transform:uppercase; color:#8b1a1a; margin-bottom:0.4rem; font-family:'Noto Sans Devanagari',sans-serif; }
+.sig-divline { background:rgba(59,42,42,0.1); }
+
+/* Print submit */
+.print-submit {
+  width:100%; padding:1rem; border:none; border-radius:2px;
+  font-family:'Noto Serif Devanagari',serif; font-size:1rem; font-weight:600;
+  cursor:pointer; margin-top:1rem; transition:all 0.25s;
+  display:flex; align-items:center; justify-content:center; gap:0.8rem;
+}
+.print-submit.bs { background:linear-gradient(135deg,#c0507a,#8b1a2a); color:white; box-shadow:0 4px 15px rgba(180,60,100,0.4); }
+.print-submit.gs { background:linear-gradient(135deg,#c8962e,#8b5a0a); color:white; box-shadow:0 4px 15px rgba(200,150,46,0.4); }
+.print-submit:hover { transform:translateY(-1px); filter:brightness(1.1); }
+
+/* ── REVIEWS ── */
+.reviews-section { padding: 0 3rem 5rem; }
+.review-card     { background:white; padding:1.5rem; border-radius:3px; box-shadow:0 2px 15px var(--shadow); margin-bottom:1.2rem; }
+.review-header   { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem; }
+.reviewer-name   { font-weight:500; font-size:0.9rem; }
+.review-stars    { color:var(--gold); font-size:0.8rem; }
+.review-text     { font-size:0.88rem; line-height:1.7; opacity:0.75; }
+.review-date     { font-size:0.65rem; opacity:0.4; margin-top:0.5rem; }
+.add-review      { background:var(--ivory); padding:2rem; border-radius:3px; margin-top:2rem; }
+.divider         { border:none; border-top:1px solid rgba(59,42,42,0.1); margin:2rem 0; }
+
+@media(max-width:900px) {
+  .detail-grid { grid-template-columns:1fr; gap:2rem; padding:3rem 1.5rem; }
+  .preview-col { position:static; }
+  .reviews-section { padding:0 1.5rem 3rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-grid">
+
+  <!-- ════════════ LEFT: PREVIEW ════════════ -->
+  <div class="preview-col">
+
+    <!-- Digital card preview (default) -->
+    <div id="previewDigital">
+      <div class="card-large">
+        <div class="card-visual palette-{{ card.palette }}">
+          <div class="card-large-ornament">{{ card.ornament }}</div>
+          <div class="card-large-text">
+            <div class="card-large-title" id="prevNames">Bride &amp; Groom</div>
+            <div style="width:50px;height:1px;background:rgba(255,255,255,0.4);margin:0.8rem auto;"></div>
+            <div class="card-large-sub" id="prevDate">Your Wedding Date</div>
+            <div class="card-large-sub" id="prevVenue" style="margin-top:0.3rem;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Printer card mini preview (shown when print tab active) -->
+    <div class="printer-mini-wrap" id="previewPrinter">
+      <div class="printer-mini-outer b-outer" id="pmOuter">
+        <div class="printer-mini-paper">
+          <div class="pm-head">
+            <div class="pm-bless"><span>जय श्री राम ।। जय माता दी ।।</span><span>9312666004</span></div>
+            <div class="pm-shop">धंनजय प्रिन्टर्स एण्ड कार्ड</div>
+            <span class="pm-badge b" id="pmBadge">लड़की का कार्ड फॉर्म</span>
+          </div>
+          <div class="pm-row"><span class="pm-lbl" id="pmPLbl">लड़की का नाम</span><span class="pm-val e" id="pmPrimary">नाम लिखें...</span></div>
+          <div class="pm-row"><span class="pm-lbl">पिता का नाम</span><span class="pm-val e" id="pmFather">—</span></div>
+          <div class="pm-row"><span class="pm-lbl" id="pmSLbl">लड़के का नाम</span><span class="pm-val e" id="pmSecondary">—</span></div>
+          <div class="pm-row"><span class="pm-lbl">शादी की तारीख</span><span class="pm-val e" id="pmDate">—</span></div>
+          <div class="pm-row"><span class="pm-lbl" id="pmVLbl">विवाह स्थल</span><span class="pm-val e" id="pmVenue">—</span></div>
+          <div class="pm-row"><span class="pm-lbl">फोन नं.</span><span class="pm-val e" id="pmPhone">—</span></div>
+          <div class="pm-foot">
+            <p>कृपया प्रूफ अच्छी तरह चेक कर लें</p>
+            <p>सोनिया नगर, गली न. 4, लोनी, गा.बाद</p>
+          </div>
+        </div>
+      </div>
+      <p style="text-align:center;font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;opacity:0.35;margin-top:0.8rem;">Live Preview</p>
+    </div>
+
+  </div>
+
+  <!-- ════════════ RIGHT: INFO + TABS ════════════ -->
+  <div class="detail-info">
+    <p class="eyebrow">✦ {{ card.get_palette_display }}</p>
+    <h1>{{ card.name }}</h1>
+    <div class="stars" style="font-size:1rem;">
+      {% for i in "12345" %}{% if forloop.counter <= card.average_rating %}★{% else %}☆{% endif %}{% endfor %}
+      <span style="font-size:0.8rem;opacity:0.5;margin-left:0.4rem">{{ card.reviews.count }} review{{ card.reviews.count|pluralize }}</span>
+    </div>
+    <div class="detail-price">₹{{ card.price }}</div>
+    <p class="detail-desc">{{ card.description }}</p>
+
+    <div class="detail-meta">
+      <div class="meta-item"><label>Collection</label><span>{{ card.category }}</span></div>
+      <div class="meta-item"><label>Style</label><span>{{ card.get_palette_display }}</span></div>
+      <div class="meta-item"><label>Ornament</label><span>{{ card.ornament }}</span></div>
+      <div class="meta-item"><label>Format</label><span>Digital Download</span></div>
+    </div>
+
+    {% if user.is_authenticated %}
+
+    <!-- ════ TABS: Preview / Customize / Print Order ════ -->
+    <div class="section-tabs">
+      <button class="stab active" id="stab-preview" onclick="switchStab('preview')">
+        <span class="stab-icon">👁</span> Preview
+      </button>
+      <button class="stab" id="stab-customize" onclick="switchStab('customize')">
+        <span class="stab-icon">✨</span> Customize
+      </button>
+      <button class="stab" id="stab-print" onclick="switchStab('print')">
+        <span class="stab-icon">🖨</span> Print Order
+      </button>
+    </div>
+
+    <!-- ── TAB: PREVIEW ── -->
+    <div class="tab-pane active" id="pane-preview">
+      <p class="eyebrow" style="margin-bottom:0.8rem;">✦ Quick Preview</p>
+      <input type="text" class="form-input" id="inp_bride" placeholder="Bride's name" oninput="updateDigital()">
+      <input type="text" class="form-input" id="inp_groom" placeholder="Groom's name" oninput="updateDigital()">
+      <input type="text" class="form-input" id="inp_date"  placeholder="Wedding date"  oninput="updateDigital()">
+      <input type="text" class="form-input" id="inp_venue" placeholder="Venue"          oninput="updateDigital()">
+      <div class="detail-actions" style="margin-top:1.5rem;">
+        <a href="{% url 'customize_card' card.slug %}" class="btn btn-dark">Customize &amp; Add to Cart</a>
+        <a href="{% url 'marketplace' %}" class="btn btn-outline">← Back</a>
+      </div>
+    </div>
+
+    <!-- ── TAB: CUSTOMIZE ── -->
+    <div class="tab-pane" id="pane-customize">
+      <p style="font-size:0.88rem;opacity:0.6;line-height:1.7;margin-bottom:1.5rem;">
+        Head to the full customization studio to choose palette, typography, ornament, card shape and add to cart.
+      </p>
+      <a href="{% url 'customize_card' card.slug %}" class="btn btn-dark" style="display:inline-block;">
+        Open Card Studio →
+      </a>
+    </div>
+
+    <!-- ── TAB: PRINT ORDER ── -->
+    <div class="tab-pane" id="pane-print">
+      <div class="print-section">
+        <p class="eyebrow" style="margin-bottom:0.3rem;">✦ धंनजय प्रिन्टर्स एण्ड कार्ड</p>
+        <p style="font-size:0.82rem;opacity:0.6;margin-bottom:1.2rem;line-height:1.6;">
+          Select Bride or Groom — fill the form and submit your print order.
+        </p>
+
+        <!-- Bride / Groom toggle -->
+        <div class="type-toggle">
+          <button type="button" class="ttype-btn b-active" id="tbBride" onclick="switchPType('bride')">
+            👰 लड़की (Bride)
+          </button>
+          <button type="button" class="ttype-btn" id="tbGroom" onclick="switchPType('groom')">
+            🤵 लड़का (Groom)
+          </button>
+        </div>
+
+        <!-- PRINT FORM -->
+        <form method="post" action="{% url 'printer_card_form' %}" id="printForm">
+          {% csrf_token %}
+          <input type="hidden" name="card_type" id="pct" value="bride">
+
+          <!-- Primary -->
+          <div class="pf-section">
+            <label class="pf-lbl" id="lPrimary">लड़की का नाम / Bride's Name *</label>
+            <input type="text" name="primary_name" class="form-input" placeholder="पूरा नाम" required oninput="liveUpdate()">
+            <label class="pf-lbl">पिता का नाम / Father's Name *</label>
+            <input type="text" name="primary_father_name" class="form-input" placeholder="" required oninput="liveUpdate()">
+            <label class="pf-lbl">दादा का नाम / Grandfather's Name</label>
+            <input type="text" name="primary_dada_name" class="form-input" placeholder="">
+            <label class="pf-lbl" id="lPAddr">लड़की का पता / Bride's Address *</label>
+            <input type="text" name="primary_address" class="form-input" placeholder="पूरा पता" required>
+          </div>
+
+          <hr class="pf-hr">
+
+          <!-- Secondary -->
+          <div class="pf-section">
+            <label class="pf-lbl" id="lSecondary">लड़के का नाम / Groom's Name *</label>
+            <input type="text" name="secondary_name" class="form-input" placeholder="पूरा नाम" required oninput="liveUpdate()">
+            <label class="pf-lbl">पिता का नाम / Father's Name *</label>
+            <input type="text" name="secondary_father_name" class="form-input" placeholder="" required>
+            <label class="pf-lbl" id="lSAddr">लड़के का पता / Groom's Address</label>
+            <input type="text" name="secondary_address" class="form-input" placeholder="पूरा पता">
+          </div>
+
+          <hr class="pf-hr">
+
+          <!-- Sagaai -->
+          <div class="pf-section">
+            <label class="pf-lbl">सगाई / Engagement</label>
+            <div class="pf-inline" style="margin-bottom:0.5rem;">
+              <input type="text" name="sagaai_date" class="form-input md" placeholder="तारीख">
+              <span class="pf-sep">समय</span>
+              <input type="text" name="sagaai_time" class="form-input sm" placeholder="बजे">
+              <span class="pf-sep">प्रीतिभोज</span>
+              <input type="text" name="sagaai_preetibhoj" class="form-input md" placeholder="">
+            </div>
+          </div>
+
+          <!-- Shaadi -->
+          <div class="pf-section">
+            <label class="pf-lbl">शादी की तारीख / Wedding Date</label>
+            <input type="text" name="shaadi_date" class="form-input" placeholder="दिनांक" oninput="liveUpdate()">
+          </div>
+
+          <!-- BRIDE-ONLY fields -->
+          <div class="bride-only" id="brideFields">
+            <div class="pf-inline" style="margin-bottom:0.5rem;">
+              <span class="pf-sep">बारात स्वागत</span>
+              <input type="text" name="barat_swagat" class="form-input sm" placeholder="समय">
+              <span class="pf-sep">प्रीतिभोज</span>
+              <input type="text" name="shaadi_preetibhoj" class="form-input md" placeholder="">
+            </div>
+            <label class="pf-lbl">विवाह स्थल / Venue</label>
+            <input type="text" name="vivah_sthal" class="form-input" placeholder="स्थल का नाम व पता" oninput="liveUpdate()">
+          </div>
+
+          <!-- GROOM-ONLY fields -->
+          <div class="groom-only" id="groomFields">
+            <div class="pf-inline" style="margin-bottom:0.5rem;">
+              <span class="pf-sep">घुड़चढ़ी</span>
+              <input type="text" name="ghudchadi_time" class="form-input sm" placeholder="समय">
+              <span class="pf-sep">बारात प्रस्थान</span>
+              <input type="text" name="barat_prasthan" class="form-input md" placeholder="">
+            </div>
+            <label class="pf-lbl">बारात कहाँ जाएगी</label>
+            <input type="text" name="barat_destination" class="form-input" placeholder="गंतव्य" oninput="liveUpdate()">
+            <label class="pf-lbl" style="margin-top:0.6rem;">रिशेप्शन / Reception</label>
+            <div class="pf-inline">
+              <input type="text" name="reception_date"       class="form-input md" placeholder="तारीख">
+              <span class="pf-sep">प्रीतिभोज</span>
+              <input type="text" name="reception_preetibhoj" class="form-input sm" placeholder="समय">
+              <span class="pf-sep">स्थल</span>
+              <input type="text" name="reception_sthal"      class="form-input md" placeholder="">
+            </div>
+          </div>
+
+          <hr class="pf-hr">
+
+          <label class="pf-lbl">बाल आकांक्षा</label>
+          <input type="text" name="bal_aakanksha" class="form-input" placeholder="">
+          <label class="pf-lbl">अतिरिक्त जानकारी</label>
+          <input type="text" name="extra_info" class="form-input" placeholder="कोई अन्य विवरण...">
+
+          <!-- Signatures -->
+          <div class="sig-grid">
+            <div class="sig-c">
+              <div class="sig-c-lbl">दर्शनाभिलाषी :–</div>
+              <input type="text" name="darshanaabhilashi" class="form-input" placeholder="">
+            </div>
+            <div class="sig-divline"></div>
+            <div class="sig-c">
+              <div class="sig-c-lbl">विनीत :–</div>
+              <input type="text" name="vineet" class="form-input" placeholder="">
+            </div>
+          </div>
+
+          <label class="pf-lbl">फोन नं. / Phone *</label>
+          <input type="tel" name="phone" class="form-input" placeholder="मोबाइल नंबर" required oninput="liveUpdate()">
+
+          <button type="submit" class="print-submit bs" id="printSubmitBtn">
+            💾 ऑर्डर सबमिट करें
+          </button>
+        </form>
+      </div>
+    </div><!-- /pane-print -->
+
+    {% else %}
+    <!-- Not logged in -->
+    <div class="detail-actions">
+      <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-dark">Login to Customize</a>
+      <a href="{% url 'marketplace' %}" class="btn btn-outline">← Back</a>
+    </div>
+    {% endif %}
+
+  </div><!-- /detail-info -->
+</div><!-- /detail-grid -->
+
+<!-- ════════════ REVIEWS ════════════ -->
+<section class="reviews-section">
+  <hr class="divider">
+  <div class="section-header">
+    <p class="eyebrow">✦ Customer Reviews</p>
+    <h2 class="section-title">What couples <em>say</em></h2>
+  </div>
+
+  {% for review in reviews %}
+  <div class="review-card">
+    <div class="review-header">
+      <span class="reviewer-name">{{ review.user.username }}</span>
+      <span class="review-stars">{% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+    </div>
+    <p class="review-text">{{ review.comment }}</p>
+    <p class="review-date">{{ review.created_at|date:"F j, Y" }}</p>
+  </div>
+  {% empty %}
+  <p style="opacity:0.5;text-align:center;padding:2rem 0;font-style:italic;">Be the first to review this design.</p>
+  {% endfor %}
+
+  {% if user.is_authenticated %}
+  <div class="add-review">
+    <p class="eyebrow" style="margin-bottom:1rem;">✦ Leave a Review</p>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="review_submit" value="1">
+      <label class="form-label">Rating</label>
+      {{ review_form.rating }}
+      <label class="form-label">Your review</label>
+      {{ review_form.comment }}
+      {% for error in review_form.non_field_errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+      <button type="submit" class="btn btn-dark" style="margin-top:0.5rem;">Submit Review</button>
+    </form>
+  </div>
+  {% else %}
+  <p style="opacity:0.6;font-size:0.88rem;margin-top:1rem;">
+    <a href="{% url 'login' %}" style="color:var(--gold);">Login</a> to leave a review.
+  </p>
+  {% endif %}
+</section>
+
+<script>
+/* ── TAB SWITCHING ── */
+function switchStab(name) {
+  document.querySelectorAll('.stab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('stab-' + name).classList.add('active');
+  document.getElementById('pane-' + name).classList.add('active');
+
+  // Swap preview panel
+  const dPreview = document.getElementById('previewDigital');
+  const pPreview = document.getElementById('previewPrinter');
+  if (name === 'print') {
+    dPreview.style.display = 'none';
+    pPreview.style.display = 'block';
+  } else {
+    dPreview.style.display = 'block';
+    pPreview.style.display = 'none';
+  }
+}
+
+/* ── DIGITAL PREVIEW ── */
+function updateDigital() {
+  const bride = document.getElementById('inp_bride').value || 'Bride';
+  const groom = document.getElementById('inp_groom').value || 'Groom';
+  const date  = document.getElementById('inp_date').value;
+  const venue = document.getElementById('inp_venue').value;
+  document.getElementById('prevNames').innerHTML  = bride + ' <em style="opacity:0.7">&</em> ' + groom;
+  document.getElementById('prevDate').textContent = date  || 'Your Wedding Date';
+  document.getElementById('prevVenue').textContent= venue;
+}
+
+/* ── PRINTER TYPE SWITCH ── */
+let pType = 'bride';
+
+function switchPType(type) {
+  pType = type;
+  const isBride = type === 'bride';
+
+  // Buttons
+  document.getElementById('tbBride').className = 'ttype-btn' + (isBride  ? ' b-active' : '');
+  document.getElementById('tbGroom').className = 'ttype-btn' + (!isBride ? ' g-active' : '');
+
+  // Hidden input
+  document.getElementById('pct').value = type;
+
+  // Show/hide variant fields
+  document.getElementById('brideFields').style.display = isBride  ? 'block' : 'none';
+  document.getElementById('groomFields').style.display = !isBride ? 'block' : 'none';
+
+  // Labels
+  document.getElementById('lPrimary').textContent   = isBride ? 'लड़की का नाम / Bride\'s Name *'   : 'लड़के का नाम / Groom\'s Name *';
+  document.getElementById('lPAddr').textContent     = isBride ? 'लड़की का पता / Bride\'s Address *' : 'लड़के का पता / Groom\'s Address *';
+  document.getElementById('lSecondary').textContent = isBride ? 'लड़के का नाम / Groom\'s Name *'   : 'लड़की का नाम / Bride\'s Name *';
+  document.getElementById('lSAddr').textContent     = isBride ? 'लड़के का पता / Groom\'s Address'  : 'लड़की का पता / Bride\'s Address';
+
+  // Submit button style
+  document.getElementById('printSubmitBtn').className = 'print-submit ' + (isBride ? 'bs' : 'gs');
+
+  // Mini preview badge & border
+  document.getElementById('pmOuter').className = 'printer-mini-outer ' + (isBride ? 'b-outer' : 'g-outer');
+  const badge = document.getElementById('pmBadge');
+  badge.className   = 'pm-badge ' + (isBride ? 'b' : 'g');
+  badge.textContent = isBride ? 'लड़की का कार्ड फॉर्म' : 'लड़के का कार्ड फॉर्म';
+  document.getElementById('pmPLbl').textContent = isBride ? 'लड़की का नाम' : 'लड़के का नाम';
+  document.getElementById('pmSLbl').textContent = isBride ? 'लड़के का नाम' : 'लड़की का नाम';
+  document.getElementById('pmVLbl').textContent = isBride ? 'विवाह स्थल'   : 'बारात कहाँ';
+
+  liveUpdate();
+}
+
+/* ── PRINTER LIVE PREVIEW ── */
+function liveUpdate() {
+  const g = n => { const el = document.querySelector(`#printForm [name="${n}"]`); return el ? el.value.trim() : ''; };
+  const set = (id, val) => {
+    const el = document.getElementById(id); if (!el) return;
+    el.textContent = val || '—';
+    el.className   = 'pm-val' + (val ? '' : ' e');
+  };
+  set('pmPrimary',   g('primary_name'));
+  set('pmFather',    g('primary_father_name'));
+  set('pmSecondary', g('secondary_name'));
+  set('pmDate',      g('shaadi_date'));
+  set('pmPhone',     g('phone'));
+  const venue = pType === 'bride' ? g('vivah_sthal') : (g('barat_destination') || g('reception_sthal'));
+  set('pmVenue', venue);
+}
+
+// Init
+switchPType('bride');
+</script>
+{% endblock %}

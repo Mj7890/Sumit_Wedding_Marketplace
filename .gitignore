@@ -1,0 +1,9 @@
+env/
+*.sqlite3
+__pycache__/
+*.pyc
+staticfiles/
+media/card_images/cache/
+*.zip
+.DS_Store
+*.log

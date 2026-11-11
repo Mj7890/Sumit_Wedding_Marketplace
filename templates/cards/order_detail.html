@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Order #{{ order.pk }} — Vows & Blooms{% endblock %}
+{% block extra_css %}
+<style>
+.order-detail-wrap{max-width:800px;margin:0 auto;padding:5rem 2rem;}
+.order-detail-wrap h1{font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-weight:300;margin-bottom:0.5rem;color:var(--deep);}
+.success-banner{background:linear-gradient(135deg,#d4edda,#c3e6cb);padding:1.5rem 2rem;border-radius:3px;
+  margin-bottom:2rem;border-left:4px solid #28a745;}
+.success-banner p{font-size:0.9rem;color:#155724;line-height:1.6;}
+.success-banner strong{font-family:'Cormorant Garamond',serif;font-size:1.2rem;display:block;margin-bottom:0.3rem;}
+.order-items{background:white;border-radius:3px;box-shadow:0 2px 15px var(--shadow);overflow:hidden;}
+.order-item-row{display:grid;grid-template-columns:70px 1fr auto;gap:1.2rem;align-items:center;
+  padding:1.2rem 1.5rem;border-bottom:1px solid rgba(59,42,42,0.06);}
+.order-item-row:last-child{border-bottom:none;}
+.item-mini-thumb{width:70px;height:90px;border-radius:2px;overflow:hidden;}
+.item-mini-thumb .card-visual{height:100%;padding:0.3rem;font-size:1.2rem;border-radius:2px;}
+.item-row-name{font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:0.3rem;}
+.item-row-custom{font-size:0.78rem;opacity:0.6;line-height:1.5;}
+.order-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.5rem;}
+.meta-box{background:var(--ivory);padding:1.2rem 1.5rem;border-radius:3px;}
+.meta-box label{font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:0.4rem;}
+.meta-box span{font-size:0.9rem;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="order-detail-wrap">
+  <a href="{% url 'orders' %}" style="font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);text-decoration:none;">← All Orders</a>
+  <h1 style="margin-top:1rem;">Order #{{ order.pk }}</h1>
+
+  {% if order.status == 'confirmed' %}
+  <div class="success-banner">
+    <p><strong>🎉 Order Confirmed!</strong>Your wedding cards are being prepared. You'll receive them digitally shortly.</p>
+  </div>
+  {% endif %}
+
+  <div class="order-meta-grid" style="margin-bottom:2rem;">
+    <div class="meta-box"><label>Status</label><span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span></div>
+    <div class="meta-box"><label>Order Date</label><span>{{ order.created_at|date:"F j, Y" }}</span></div>
+    <div class="meta-box"><label>Items</label><span>{{ order.items.count }} item{{ order.items.count|pluralize }}</span></div>
+    <div class="meta-box"><label>Total</label><span style="color:var(--gold);font-size:1.1rem;">₹{{ order.total }}</span></div>
+  </div>
+
+  <div class="order-items">
+    {% for item in order.items.all %}
+    <div class="order-item-row">
+      <div class="item-mini-thumb">
+        <div class="card-visual palette-{{ item.card.palette }}">
+          <span>{{ item.card.ornament }}</span>
+        </div>
+      </div>
+      <div>
+        <div class="item-row-name">{{ item.card.name }}</div>
+        {% if item.customization %}
+        <div class="item-row-custom">
+          <strong>{{ item.customization.bride_name }} &amp; {{ item.customization.groom_name }}</strong><br>
+          {{ item.customization.wedding_date }}<br>
+          {% if item.customization.venue %}{{ item.customization.venue }}{% endif %}
+        </div>
+        {% endif %}
+      </div>
+      <div style="text-align:right;">
+        <div style="color:var(--gold)">₹{{ item.subtotal }}</div>
+        <div style="font-size:0.75rem;opacity:0.5;">× {{ item.quantity }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div style="text-align:right;margin-top:1.5rem;">
+    <a href="{% url 'marketplace' %}" class="btn btn-outline">Continue Shopping</a>
+  </div>
+</div>
+{% endblock %}

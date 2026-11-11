@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Checkout — Vows & Blooms{% endblock %}
+{% block extra_css %}
+<style>
+.checkout-wrap{max-width:700px;margin:0 auto;padding:5rem 2rem;}
+.checkout-wrap h1{font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-weight:300;margin-bottom:2rem;color:var(--deep);}
+.order-summary{background:var(--ivory);padding:2rem;border-radius:3px;margin-bottom:2rem;}
+.order-line{display:flex;justify-content:space-between;align-items:flex-start;padding:1rem 0;border-bottom:1px solid rgba(59,42,42,0.08);}
+.order-line:last-child{border-bottom:none;}
+.order-line-name{font-family:'Cormorant Garamond',serif;font-size:1.1rem;}
+.order-line-custom{font-size:0.78rem;opacity:0.6;line-height:1.5;margin-top:0.2rem;}
+.order-total{display:flex;justify-content:space-between;font-size:1.5rem;padding-top:1rem;
+  font-family:'Cormorant Garamond',serif;font-weight:300;color:var(--deep);}
+.confirm-btn{width:100%;padding:1.2rem;background:var(--deep);color:var(--cream);border:none;
+  font-family:'Jost',sans-serif;font-size:0.85rem;letter-spacing:0.15em;text-transform:uppercase;
+  cursor:pointer;transition:background 0.25s;margin-top:1.5rem;}
+.confirm-btn:hover{background:var(--gold);}
+.payment-note{font-size:0.78rem;opacity:0.5;text-align:center;margin-top:1rem;line-height:1.6;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="checkout-wrap">
+  <p class="eyebrow">✦ Checkout</p>
+  <h1>Review Your Order</h1>
+
+  <div class="order-summary">
+    {% for item in items %}
+    <div class="order-line">
+      <div>
+        <div class="order-line-name">{{ item.card.name }} × {{ item.quantity }}</div>
+        {% if item.customization %}
+        <div class="order-line-custom">
+          {{ item.customization.bride_name }} &amp; {{ item.customization.groom_name }}<br>
+          {{ item.customization.wedding_date }}
+        </div>
+        {% endif %}
+      </div>
+      <div style="font-size:1rem;color:var(--gold)">₹{{ item.subtotal }}</div>
+    </div>
+    {% endfor %}
+    <div class="order-total">
+      <span>Total</span>
+      <span>₹{{ total }}</span>
+    </div>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div style="background:white;padding:1.5rem;border-radius:3px;border:1px solid rgba(59,42,42,0.08);margin-bottom:1rem;">
+      <p class="eyebrow" style="margin-bottom:1rem;">✦ Delivery</p>
+      <p style="font-size:0.88rem;opacity:0.7;line-height:1.7;">Your customized wedding cards will be delivered digitally to your registered email address after order confirmation.</p>
+    </div>
+    <button type="submit" class="confirm-btn">✦ Confirm Order — ₹{{ total }}</button>
+    <p class="payment-note">This is a demo. No real payment is processed. Orders are confirmed instantly.</p>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block title %}Verify OTP — Vows & Blooms{% endblock %}
+{% block extra_css %}
+<style>
+.auth-page{min-height:85vh;display:flex;align-items:center;justify-content:center;padding:4rem 1rem;
+  background:radial-gradient(ellipse 70% 60% at 50% 40%,#f0e4d4,var(--cream));}
+.auth-card{background:white;padding:3rem;border-radius:4px;box-shadow:0 20px 60px var(--shadow);width:100%;max-width:440px;}
+.auth-step-bar{display:flex;gap:0;margin-bottom:2rem;border-radius:20px;overflow:hidden;background:var(--ivory);}
+.auth-step{flex:1;padding:0.5rem;text-align:center;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;opacity:0.4;}
+.auth-step.done{background:var(--gold);color:white;opacity:1;}
+.auth-step.active{background:var(--deep);color:white;opacity:1;}
+.auth-title{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:300;margin-bottom:0.3rem;color:var(--deep);}
+.auth-sub{font-size:0.83rem;opacity:0.6;margin-bottom:2rem;line-height:1.6;}
+.email-tag{background:var(--ivory);padding:0.3rem 0.8rem;border-radius:20px;font-size:0.82rem;color:var(--gold);font-weight:500;}
+
+/* OTP input boxes */
+.otp-row{display:flex;gap:0.6rem;justify-content:center;margin:1.5rem 0;}
+.otp-box{width:52px;height:60px;border:2px solid rgba(59,42,42,0.15);border-radius:3px;text-align:center;
+  font-size:1.6rem;font-weight:600;color:var(--deep);font-family:'Cormorant Garamond',serif;outline:none;
+  transition:border-color 0.2s;background:var(--cream);}
+.otp-box:focus{border-color:var(--gold);background:white;}
+.otp-box.filled{border-color:var(--gold);}
+
+.timer-row{text-align:center;font-size:0.78rem;opacity:0.55;margin-bottom:1rem;}
+.timer-count{color:var(--rose);font-weight:600;}
+.error-msg{background:#fdf0f0;color:#c0392b;border:1px solid #f5c6cb;padding:0.7rem 1rem;border-radius:3px;font-size:0.83rem;margin-bottom:1rem;}
+.resend-link{color:var(--gold);text-decoration:none;font-weight:500;cursor:pointer;}
+.resend-link:hover{text-decoration:underline;}
+.auth-footer{text-align:center;margin-top:1.5rem;font-size:0.82rem;opacity:0.6;}
+.auth-footer a{color:var(--gold);text-decoration:none;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-step-bar">
+      <div class="auth-step done">✓ Email</div>
+      <div class="auth-step active">2. Verify OTP</div>
+      <div class="auth-step">3. Set Password</div>
+    </div>
+    <p class="eyebrow">✦ Email Verification</p>
+    <h1 class="auth-title">Enter OTP</h1>
+    <p class="auth-sub">
+      We sent a 6-digit code to<br>
+      <span class="email-tag">{{ email }}</span>
+    </p>
+    {% if error %}<div class="error-msg">{{ error }}</div>{% endif %}
+
+    <form method="post" id="otpForm">
+      {% csrf_token %}
+      <!-- 6 individual OTP boxes -->
+      <div class="otp-row">
+        <input class="otp-box" type="text" maxlength="1" inputmode="numeric" id="d0" autofocus>
+        <input class="otp-box" type="text" maxlength="1" inputmode="numeric" id="d1">
+        <input class="otp-box" type="text" maxlength="1" inputmode="numeric" id="d2">
+        <input class="otp-box" type="text" maxlength="1" inputmode="numeric" id="d3">
+        <input class="otp-box" type="text" maxlength="1" inputmode="numeric" id="d4">
+        <input class="otp-box" type="text" maxlength="1" inputmode="numeric" id="d5">
+      </div>
+      <input type="hidden" name="otp" id="otpHidden">
+      <button type="submit" class="btn btn-dark" style="width:100%;" id="verifyBtn" disabled>Verify OTP</button>
+    </form>
+
+    <div class="timer-row" style="margin-top:1rem;">
+      OTP expires in <span class="timer-count" id="timerEl">10:00</span>
+    </div>
+
+    <p class="auth-footer">
+      Didn't receive it?
+      <a href="{% url 'resend_otp' %}" class="resend-link">Resend OTP</a>
+      &nbsp;·&nbsp;
+      <a href="{% url 'register_step1' %}">Change Email</a>
+    </p>
+  </div>
+</div>
+<script>
+// Auto-advance OTP boxes
+const boxes = Array.from(document.querySelectorAll('.otp-box'));
+const hidden = document.getElementById('otpHidden');
+const btn    = document.getElementById('verifyBtn');
+
+boxes.forEach((box, i) => {
+  box.addEventListener('input', e => {
+    const val = e.target.value.replace(/\D/g,'');
+    box.value = val;
+    box.classList.toggle('filled', !!val);
+    if (val && i < 5) boxes[i+1].focus();
+    syncHidden();
+  });
+  box.addEventListener('keydown', e => {
+    if (e.key === 'Backspace' && !box.value && i > 0) {
+      boxes[i-1].focus(); boxes[i-1].value=''; boxes[i-1].classList.remove('filled');
+      syncHidden();
+    }
+  });
+  box.addEventListener('paste', e => {
+    e.preventDefault();
+    const txt = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
+    txt.split('').forEach((c,j) => { if(boxes[j]){boxes[j].value=c;boxes[j].classList.add('filled');} });
+    if(txt.length<6) boxes[txt.length]?.focus(); else boxes[5].focus();
+    syncHidden();
+  });
+});
+
+function syncHidden() {
+  const code = boxes.map(b=>b.value).join('');
+  hidden.value = code;
+  btn.disabled = code.length < 6;
+}
+
+// Countdown timer — 10 minutes
+let secs = 600;
+const timer = setInterval(() => {
+  secs--;
+  if (secs <= 0) { clearInterval(timer); document.getElementById('timerEl').textContent = 'Expired'; return; }
+  const m = String(Math.floor(secs/60)).padStart(2,'0');
+  const s = String(secs%60).padStart(2,'0');
+  document.getElementById('timerEl').textContent = m + ':' + s;
+}, 1000);
+</script>
+{% endblock %}
